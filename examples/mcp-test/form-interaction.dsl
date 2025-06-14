@@ -2,36 +2,39 @@
 # Tests browser form filling and interaction capabilities
 
 # Connect to the MCP browser server
-connect "./mcp-browser-server"
+connect "./bin/mcp-browser-server"
+
+# Wait for browser extension connection
+call browser_wait_for_connection {timeout: 5}
 
 # Define reusable automation for form testing
 define test_form(url, username, password) {
   # Create tab and navigate
-  call create_tab -> tab
-  call navigate {tabId: tab.id, url: url}
+  call browser_create_tab -> tab
+  call browser_navigate {tabId: tab.id, url: url}
   
   # Wait for form to be present
-  call wait_for_element {
+  call browser_wait_for_element {
     tabId: tab.id,
     selector: "form"
   }
   
   # Fill username field
-  call type {
+  call browser_type {
     tabId: tab.id,
     selector: "input[name='username']",
     text: username
   }
   
   # Fill password field
-  call type {
+  call browser_type {
     tabId: tab.id,
     selector: "input[name='password']",
     text: password
   }
   
   # Click submit button
-  call click {
+  call browser_click {
     tabId: tab.id,
     selector: "button[type='submit']"
   }
@@ -40,15 +43,19 @@ define test_form(url, username, password) {
   wait 2
   
   # Check result
-  call extract_content {
+  call browser_extract_content {
     tabId: tab.id,
-    selector: ".message, .error, .success"
+    selector: ".message, .error, .success, body"
   } -> result
   
-  print "Form submission result: " + result[0]
+  if len(result) > 0 {
+    print "Form submission result: " + result[0]
+  } else {
+    print "Form submitted (no message found)"
+  }
   
   # Clean up
-  call close_tab {tabId: tab.id}
+  call browser_close_tab {tabId: tab.id}
 }
 
 # Run the form test automation
