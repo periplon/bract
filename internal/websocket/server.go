@@ -40,6 +40,7 @@ type Message struct {
 	Command string          `json:"command,omitempty"` // Chrome extension expects 'command' field
 	Action  string          `json:"action,omitempty"`  // Keep for backward compatibility
 	Data    json.RawMessage `json:"data,omitempty"`
+	Result  json.RawMessage `json:"result,omitempty"` // Chrome extension sends responses with 'result' field
 	Params  json.RawMessage `json:"params,omitempty"` // Chrome extension uses 'params' for data
 	Error   string          `json:"error,omitempty"`
 }
@@ -184,7 +185,12 @@ func (c *Connection) readPump() {
 		switch msg.Type {
 		case "response":
 			// Response to a command sent to the extension
-			c.server.browserClient.HandleResponse(msg.ID, msg.Data, msg.Error)
+			// Chrome extension sends response data in 'result' field
+			responseData := msg.Result
+			if responseData == nil {
+				responseData = msg.Data // Fallback to 'data' field for backward compatibility
+			}
+			c.server.browserClient.HandleResponse(msg.ID, responseData, msg.Error)
 		case "event":
 			// Event from the extension (e.g., tab closed)
 			c.server.browserClient.HandleEvent(msg.Action, msg.Data)
@@ -323,6 +329,7 @@ func mapActionToCommand(action string) string {
 		"captureScreenshot": "tabs.captureScreenshot",
 		"captureVideo":      "tabs.captureVideo",
 		"extractText":       "tabs.extractText",
+		"extractContent":    "tabs.extractText",
 		"findElements":      "tabs.findElements",
 		"click":             "tabs.click",
 		"type":              "tabs.type",

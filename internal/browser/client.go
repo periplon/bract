@@ -215,7 +215,7 @@ func (c *Client) ActivateTab(ctx context.Context, tabID int) error {
 // Navigation Methods
 
 // Navigate navigates to a URL in a tab
-func (c *Client) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error {
+func (c *Client) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error) {
 	if tabID == 0 {
 		tabID = c.activeTabID
 	}
@@ -226,8 +226,8 @@ func (c *Client) Navigate(ctx context.Context, tabID int, url string, waitUntilL
 		"waitUntilLoad": waitUntilLoad,
 	}
 
-	_, err := c.sendCommand(ctx, "navigate", params)
-	return err
+	response, err := c.sendCommand(ctx, "navigate", params)
+	return response, err
 }
 
 // Reload reloads a tab
@@ -282,7 +282,7 @@ func (c *Client) Type(ctx context.Context, tabID int, selector, text string, cle
 }
 
 // Scroll scrolls the page
-func (c *Client) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error {
+func (c *Client) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error) {
 	if tabID == 0 {
 		tabID = c.activeTabID
 	}
@@ -302,12 +302,12 @@ func (c *Client) Scroll(ctx context.Context, tabID int, x, y *float64, selector,
 		params["selector"] = selector
 	}
 
-	_, err := c.sendCommand(ctx, "scroll", params)
-	return err
+	response, err := c.sendCommand(ctx, "scroll", params)
+	return response, err
 }
 
 // WaitForElement waits for an element to appear
-func (c *Client) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error {
+func (c *Client) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error) {
 	if tabID == 0 {
 		tabID = c.activeTabID
 	}
@@ -319,8 +319,8 @@ func (c *Client) WaitForElement(ctx context.Context, tabID int, selector string,
 		"state":    state,
 	}
 
-	_, err := c.sendCommand(ctx, "waitForElement", params)
-	return err
+	response, err := c.sendCommand(ctx, "waitForElement", params)
+	return response, err
 }
 
 // Content Methods
@@ -361,12 +361,29 @@ func (c *Client) ExtractContent(ctx context.Context, tabID int, selector, conten
 		return nil, err
 	}
 
-	var results []string
-	if err := json.Unmarshal(data, &results); err != nil {
+	// Browser extension returns {text: ...}
+	var response struct {
+		Text interface{} `json:"text"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, err
 	}
 
-	return results, nil
+	// Handle both string and array responses
+	switch v := response.Text.(type) {
+	case string:
+		return []string{v}, nil
+	case []interface{}:
+		results := make([]string, len(v))
+		for i, item := range v {
+			if str, ok := item.(string); ok {
+				results[i] = str
+			}
+		}
+		return results, nil
+	default:
+		return nil, fmt.Errorf("unexpected response type: %T", response.Text)
+	}
 }
 
 // Screenshot takes a screenshot
@@ -427,9 +444,9 @@ func (c *Client) GetCookies(ctx context.Context, url, name string) ([]Cookie, er
 }
 
 // SetCookie sets a browser cookie
-func (c *Client) SetCookie(ctx context.Context, cookie Cookie) error {
-	_, err := c.sendCommand(ctx, "setCookie", cookie)
-	return err
+func (c *Client) SetCookie(ctx context.Context, cookie Cookie) (json.RawMessage, error) {
+	response, err := c.sendCommand(ctx, "setCookie", cookie)
+	return response, err
 }
 
 // DeleteCookies deletes browser cookies

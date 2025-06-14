@@ -28,8 +28,8 @@ func (m *MockBrowserClient) CreateTab(ctx context.Context, url string, active bo
 }
 func (m *MockBrowserClient) CloseTab(ctx context.Context, tabID int) error    { return nil }
 func (m *MockBrowserClient) ActivateTab(ctx context.Context, tabID int) error { return nil }
-func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error {
-	return nil
+func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error) {
+	return nil, nil
 }
 func (m *MockBrowserClient) Reload(ctx context.Context, tabID int, hardReload bool) error { return nil }
 func (m *MockBrowserClient) Click(ctx context.Context, tabID int, selector string, timeout int) error {
@@ -38,11 +38,11 @@ func (m *MockBrowserClient) Click(ctx context.Context, tabID int, selector strin
 func (m *MockBrowserClient) Type(ctx context.Context, tabID int, selector, text string, clearFirst bool, delay int) error {
 	return nil
 }
-func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error {
-	return nil
+func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error) {
+	return nil, nil
 }
-func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error {
-	return nil
+func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error) {
+	return nil, nil
 }
 func (m *MockBrowserClient) ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error) {
 	return nil, nil
@@ -56,8 +56,10 @@ func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage 
 func (m *MockBrowserClient) GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error) {
 	return nil, nil
 }
-func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) error { return nil }
-func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error  { return nil }
+func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error) {
+	return nil, nil
+}
+func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error { return nil }
 func (m *MockBrowserClient) GetLocalStorage(ctx context.Context, tabID int, key string) (string, error) {
 	return "", nil
 }

@@ -445,7 +445,7 @@ func TestClient_Navigate(t *testing.T) {
 				}
 			}
 
-			err := client.Navigate(context.Background(), tt.tabID, tt.url, tt.waitUntilLoad)
+			_, err := client.Navigate(context.Background(), tt.tabID, tt.url, tt.waitUntilLoad)
 
 			if tt.wantErr {
 				require.Error(t, err)

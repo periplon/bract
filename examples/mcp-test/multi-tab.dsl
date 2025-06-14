@@ -47,7 +47,7 @@ loop i in [0, 1, 2] {
     tabId: tabs[i].id,
     script: "document.title"
   } -> title
-  print "Tab " + str(i + 1) + " title: " + title.result
+  print "Tab " + str(i + 1) + " title: " + title
 }
 
 # Close tabs in reverse order

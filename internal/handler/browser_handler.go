@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/periplon/bract/internal/browser"
-	"time"
 )
 
 // BrowserHandler handles browser automation tool requests
@@ -46,21 +45,13 @@ func (h *BrowserHandler) ListTabs(ctx context.Context, request mcp.CallToolReque
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list tabs: %v", err)), nil
 	}
 
-	// Format tabs for display
-	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Found %d open tabs:\n\n", len(tabs)))
-
-	for _, tab := range tabs {
-		status := ""
-		if tab.Active {
-			status = " [ACTIVE]"
-		}
-		result.WriteString(fmt.Sprintf("Tab %d%s: %s\n", tab.ID, status, tab.Title))
-		result.WriteString(fmt.Sprintf("  URL: %s\n", tab.URL))
-		result.WriteString(fmt.Sprintf("  Index: %d\n\n", tab.Index))
+	// Return tabs as JSON
+	tabsJSON, err := json.Marshal(tabs)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize tabs: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(result.String()), nil
+	return mcp.NewToolResultText(string(tabsJSON)), nil
 }
 
 // CreateTab creates a new browser tab
@@ -122,11 +113,13 @@ func (h *BrowserHandler) Navigate(ctx context.Context, request mcp.CallToolReque
 	waitUntilLoad := request.GetBool("waitUntilLoad", true)
 	tabID := request.GetInt("tabId", 0)
 
-	if err := h.client.Navigate(ctx, tabID, url, waitUntilLoad); err != nil {
+	response, err := h.client.Navigate(ctx, tabID, url, waitUntilLoad)
+	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to navigate: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Navigated to %s", url)), nil
+	// Return the browser extension's response (e.g., {success: true})
+	return mcp.NewToolResultText(string(response)), nil
 }
 
 // Reload reloads the current page
@@ -207,10 +200,17 @@ func (h *BrowserHandler) Scroll(ctx context.Context, request mcp.CallToolRequest
 	behavior := request.GetString("behavior", "auto")
 	tabID := request.GetInt("tabId", 0)
 
-	if err := h.client.Scroll(ctx, tabID, x, y, selector, behavior); err != nil {
+	response, err := h.client.Scroll(ctx, tabID, x, y, selector, behavior)
+	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to scroll: %v", err)), nil
 	}
 
+	// If response contains scroll position data, return it
+	if len(response) > 0 {
+		return mcp.NewToolResultText(string(response)), nil
+	}
+
+	// Otherwise, return a descriptive message
 	var scrollDesc string
 	if selector != "" {
 		scrollDesc = fmt.Sprintf("to element %s", selector)
@@ -236,10 +236,17 @@ func (h *BrowserHandler) WaitForElement(ctx context.Context, request mcp.CallToo
 	state := request.GetString("state", "visible")
 	tabID := request.GetInt("tabId", 0)
 
-	if err := h.client.WaitForElement(ctx, tabID, selector, timeout, state); err != nil {
+	response, err := h.client.WaitForElement(ctx, tabID, selector, timeout, state)
+	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to wait for element: %v", err)), nil
 	}
 
+	// If response contains element data, return it
+	if len(response) > 0 {
+		return mcp.NewToolResultText(string(response)), nil
+	}
+
+	// Otherwise, return a descriptive message
 	return mcp.NewToolResultText(fmt.Sprintf("Element %s is now %s", selector, state)), nil
 }
 
@@ -266,14 +273,8 @@ func (h *BrowserHandler) ExecuteScript(ctx context.Context, request mcp.CallTool
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to execute script: %v", err)), nil
 	}
 
-	// Format result as string
-	var resultStr string
-	if err := json.Unmarshal(result, &resultStr); err != nil {
-		// If not a string, return raw JSON
-		resultStr = string(result)
-	}
-
-	return mcp.NewToolResultText(fmt.Sprintf("Script result: %s", resultStr)), nil
+	// Return the raw script result as JSON
+	return mcp.NewToolResultText(string(result)), nil
 }
 
 // ExtractContent extracts content from the page
@@ -288,25 +289,13 @@ func (h *BrowserHandler) ExtractContent(ctx context.Context, request mcp.CallToo
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to extract content: %v", err)), nil
 	}
 
-	if len(results) == 0 {
-		return mcp.NewToolResultText("No matching elements found"), nil
+	// Return results as JSON array
+	resultsJSON, err := json.Marshal(results)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize results: %v", err)), nil
 	}
 
-	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Found %d matching element(s):\n\n", len(results)))
-
-	for i, content := range results {
-		if len(results) > 1 {
-			result.WriteString(fmt.Sprintf("[%d] ", i+1))
-		}
-		result.WriteString(content)
-		result.WriteString("\n")
-		if i < len(results)-1 {
-			result.WriteString("\n")
-		}
-	}
-
-	return mcp.NewToolResultText(result.String()), nil
+	return mcp.NewToolResultText(string(resultsJSON)), nil
 }
 
 // Screenshot takes a screenshot
@@ -322,22 +311,14 @@ func (h *BrowserHandler) Screenshot(ctx context.Context, request mcp.CallToolReq
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to take screenshot: %v", err)), nil
 	}
 
-	// Return as image content
-	// Extract MIME type from data URL (format: data:image/png;base64,...)
-	mimeType := "image/png" // default
-	if len(dataURL) > 5 && strings.HasPrefix(dataURL, "data:") {
-		if idx := strings.Index(dataURL, ";"); idx > 5 {
-			mimeType = dataURL[5:idx]
-		}
+	// Return screenshot data as JSON
+	result := map[string]string{"dataUrl": dataURL}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize screenshot: %v", err)), nil
 	}
 
-	// Extract base64 data from data URL
-	imageData := dataURL
-	if idx := strings.Index(dataURL, ","); idx > 0 {
-		imageData = dataURL[idx+1:]
-	}
-
-	return mcp.NewToolResultImage("Screenshot captured", imageData, mimeType), nil
+	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // Storage Handlers
@@ -352,28 +333,13 @@ func (h *BrowserHandler) GetCookies(ctx context.Context, request mcp.CallToolReq
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get cookies: %v", err)), nil
 	}
 
-	if len(cookies) == 0 {
-		return mcp.NewToolResultText("No cookies found"), nil
+	// Return cookies as JSON array
+	cookiesJSON, err := json.Marshal(cookies)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize cookies: %v", err)), nil
 	}
 
-	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Found %d cookie(s):\n\n", len(cookies)))
-
-	for _, cookie := range cookies {
-		result.WriteString(fmt.Sprintf("Name: %s\n", cookie.Name))
-		result.WriteString(fmt.Sprintf("Value: %s\n", cookie.Value))
-		result.WriteString(fmt.Sprintf("Domain: %s\n", cookie.Domain))
-		result.WriteString(fmt.Sprintf("Path: %s\n", cookie.Path))
-		if cookie.Secure {
-			result.WriteString("Secure: true\n")
-		}
-		if cookie.HTTPOnly {
-			result.WriteString("HttpOnly: true\n")
-		}
-		result.WriteString("\n")
-	}
-
-	return mcp.NewToolResultText(result.String()), nil
+	return mcp.NewToolResultText(string(cookiesJSON)), nil
 }
 
 // SetCookie sets a browser cookie
@@ -398,10 +364,17 @@ func (h *BrowserHandler) SetCookie(ctx context.Context, request mcp.CallToolRequ
 		ExpirationDate: request.GetFloat("expirationDate", 0),
 	}
 
-	if err := h.client.SetCookie(ctx, cookie); err != nil {
+	response, err := h.client.SetCookie(ctx, cookie)
+	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to set cookie: %v", err)), nil
 	}
 
+	// If response contains cookie data, return it
+	if len(response) > 0 {
+		return mcp.NewToolResultText(string(response)), nil
+	}
+
+	// Otherwise, return a descriptive message
 	return mcp.NewToolResultText(fmt.Sprintf("Set cookie '%s' = '%s'", name, value)), nil
 }
 
@@ -440,7 +413,13 @@ func (h *BrowserHandler) GetLocalStorage(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get localStorage: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("localStorage['%s'] = %s", key, value)), nil
+	// Return as JSON object
+	result := map[string]string{"key": key, "value": value}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize result: %v", err)), nil
+	}
+	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // SetLocalStorage sets localStorage value
@@ -478,7 +457,13 @@ func (h *BrowserHandler) GetSessionStorage(ctx context.Context, request mcp.Call
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get sessionStorage: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("sessionStorage['%s'] = %s", key, value)), nil
+	// Return as JSON object
+	result := map[string]string{"key": key, "value": value}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize result: %v", err)), nil
+	}
+	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // SetSessionStorage sets sessionStorage value
