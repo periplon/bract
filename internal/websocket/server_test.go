@@ -226,7 +226,7 @@ func TestServer_WebSocketIntegration(t *testing.T) {
 	require.NoError(t, err)
 	defer ws.Close()
 
-	// Send a ping message
+	// Test ping message
 	pingMsg := Message{
 		ID:   "test-ping",
 		Type: "ping",
@@ -240,6 +240,20 @@ func TestServer_WebSocketIntegration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "test-ping", response.ID)
 	assert.Equal(t, "pong", response.Type)
+
+	// Test connected message
+	connectedMsg := Message{
+		ID:   "test-connected",
+		Type: "connected",
+	}
+	err = ws.WriteJSON(connectedMsg)
+	require.NoError(t, err)
+
+	// Should receive ack response
+	err = ws.ReadJSON(&response)
+	require.NoError(t, err)
+	assert.Equal(t, "test-connected", response.ID)
+	assert.Equal(t, "ack", response.Type)
 }
 
 func TestServer_HandleMessage(t *testing.T) {

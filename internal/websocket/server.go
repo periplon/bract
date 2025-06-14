@@ -194,6 +194,16 @@ func (c *Connection) readPump() {
 			}); err != nil {
 				log.Printf("Failed to send pong message: %v", err)
 			}
+		case "connected":
+			// Handle connection confirmation from Chrome extension
+			log.Printf("Chrome extension connected successfully: %s", c.ID)
+			// Optionally send acknowledgment back
+			if err := c.SendMessage(&Message{
+				ID:   msg.ID,
+				Type: "ack",
+			}); err != nil {
+				log.Printf("Failed to send acknowledgment: %v", err)
+			}
 		default:
 			log.Printf("Unknown message type: %s", msg.Type)
 		}
