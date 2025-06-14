@@ -24,7 +24,7 @@ type BrowserClient interface {
 	ActivateTab(ctx context.Context, tabID int) error
 
 	// Navigation
-	Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error
+	Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error)
 	Reload(ctx context.Context, tabID int, hardReload bool) error
 
 	// Interaction

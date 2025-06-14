@@ -63,9 +63,12 @@ func (m *MockBrowserClient) ActivateTab(ctx context.Context, tabID int) error {
 	return args.Error(0)
 }
 
-func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error {
+func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error) {
 	args := m.Called(ctx, tabID, url, waitUntilLoad)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
 }
 
 func (m *MockBrowserClient) Reload(ctx context.Context, tabID int, hardReload bool) error {

@@ -122,11 +122,13 @@ func (h *BrowserHandler) Navigate(ctx context.Context, request mcp.CallToolReque
 	waitUntilLoad := request.GetBool("waitUntilLoad", true)
 	tabID := request.GetInt("tabId", 0)
 
-	if err := h.client.Navigate(ctx, tabID, url, waitUntilLoad); err != nil {
+	response, err := h.client.Navigate(ctx, tabID, url, waitUntilLoad)
+	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to navigate: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Navigated to %s", url)), nil
+	// Return the browser extension's response (e.g., {success: true})
+	return mcp.NewToolResultText(string(response)), nil
 }
 
 // Reload reloads the current page

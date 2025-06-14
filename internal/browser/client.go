@@ -215,7 +215,7 @@ func (c *Client) ActivateTab(ctx context.Context, tabID int) error {
 // Navigation Methods
 
 // Navigate navigates to a URL in a tab
-func (c *Client) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error {
+func (c *Client) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error) {
 	if tabID == 0 {
 		tabID = c.activeTabID
 	}
@@ -226,8 +226,8 @@ func (c *Client) Navigate(ctx context.Context, tabID int, url string, waitUntilL
 		"waitUntilLoad": waitUntilLoad,
 	}
 
-	_, err := c.sendCommand(ctx, "navigate", params)
-	return err
+	response, err := c.sendCommand(ctx, "navigate", params)
+	return response, err
 }
 
 // Reload reloads a tab
