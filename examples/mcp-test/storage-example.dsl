@@ -57,7 +57,8 @@ print "\n=== Current Storage State ==="
 
 # Get cookies
 call browser_get_cookies {url: "https://example.com"} -> cookies
-print "Cookies:", cookies
+print "Cookies:"
+print cookies
 
 # Get localStorage preferences
 call browser_get_local_storage {tabId: tab.id, key: "theme"} -> theme
@@ -66,7 +67,8 @@ print "User preferences: theme=" + theme.value + ", language=" + lang.value
 
 # Get sessionStorage draft
 call browser_get_session_storage {tabId: tab.id, key: "form_draft"} -> draft
-print "Form draft:", draft.value
+print "Form draft:"
+print draft.value
 
 # Clean up specific items
 print "\n=== Cleanup Example ==="
