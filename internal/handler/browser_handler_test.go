@@ -354,11 +354,11 @@ func TestBrowserHandler_Screenshot(t *testing.T) {
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 2) // Text + Image
-				
+
 				// First content should be text
 				text := getTextFromContent(t, result.Content[0])
 				assert.Equal(t, "Screenshot captured", text)
-				
+
 				// Second content should be image
 				var imageContent mcp.ImageContent
 				switch ic := result.Content[1].(type) {
@@ -394,11 +394,11 @@ func TestBrowserHandler_Screenshot(t *testing.T) {
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 2) // Text + Image
-				
+
 				// First content should be text
 				text := getTextFromContent(t, result.Content[0])
 				assert.Equal(t, "Screenshot captured", text)
-				
+
 				// Second content should be image
 				var imageContent mcp.ImageContent
 				switch ic := result.Content[1].(type) {

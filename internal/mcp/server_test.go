@@ -14,30 +14,58 @@ import (
 // MockBrowserClient is a mock implementation of handler.BrowserClient
 type MockBrowserClient struct{}
 
-func (m *MockBrowserClient) SetConnection(conn browser.Connection) {}
-func (m *MockBrowserClient) RemoveConnection(conn browser.Connection) {}
+func (m *MockBrowserClient) SetConnection(conn browser.Connection)                         {}
+func (m *MockBrowserClient) RemoveConnection(conn browser.Connection)                      {}
 func (m *MockBrowserClient) HandleResponse(id string, data json.RawMessage, errMsg string) {}
-func (m *MockBrowserClient) HandleEvent(action string, data json.RawMessage) {}
-func (m *MockBrowserClient) ListTabs(ctx context.Context) ([]browser.Tab, error) { return nil, nil }
-func (m *MockBrowserClient) CreateTab(ctx context.Context, url string, active bool) (*browser.Tab, error) { return nil, nil }
-func (m *MockBrowserClient) CloseTab(ctx context.Context, tabID int) error { return nil }
+func (m *MockBrowserClient) HandleEvent(action string, data json.RawMessage)               {}
+func (m *MockBrowserClient) ListTabs(ctx context.Context) ([]browser.Tab, error)           { return nil, nil }
+func (m *MockBrowserClient) CreateTab(ctx context.Context, url string, active bool) (*browser.Tab, error) {
+	return nil, nil
+}
+func (m *MockBrowserClient) CloseTab(ctx context.Context, tabID int) error    { return nil }
 func (m *MockBrowserClient) ActivateTab(ctx context.Context, tabID int) error { return nil }
-func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error { return nil }
+func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) error {
+	return nil
+}
 func (m *MockBrowserClient) Reload(ctx context.Context, tabID int, hardReload bool) error { return nil }
-func (m *MockBrowserClient) Click(ctx context.Context, tabID int, selector string, timeout int) error { return nil }
-func (m *MockBrowserClient) Type(ctx context.Context, tabID int, selector, text string, clearFirst bool, delay int) error { return nil }
-func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error { return nil }
-func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error { return nil }
-func (m *MockBrowserClient) ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error) { return nil, nil }
-func (m *MockBrowserClient) ExtractContent(ctx context.Context, tabID int, selector, contentType, attribute string) ([]string, error) { return nil, nil }
-func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error) { return "", nil }
-func (m *MockBrowserClient) GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error) { return nil, nil }
+func (m *MockBrowserClient) Click(ctx context.Context, tabID int, selector string, timeout int) error {
+	return nil
+}
+func (m *MockBrowserClient) Type(ctx context.Context, tabID int, selector, text string, clearFirst bool, delay int) error {
+	return nil
+}
+func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error {
+	return nil
+}
+func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error {
+	return nil
+}
+func (m *MockBrowserClient) ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error) {
+	return nil, nil
+}
+func (m *MockBrowserClient) ExtractContent(ctx context.Context, tabID int, selector, contentType, attribute string) ([]string, error) {
+	return nil, nil
+}
+func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error) {
+	return "", nil
+}
+func (m *MockBrowserClient) GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error) {
+	return nil, nil
+}
 func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) error { return nil }
-func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error { return nil }
-func (m *MockBrowserClient) GetLocalStorage(ctx context.Context, tabID int, key string) (string, error) { return "", nil }
-func (m *MockBrowserClient) SetLocalStorage(ctx context.Context, tabID int, key, value string) error { return nil }
-func (m *MockBrowserClient) GetSessionStorage(ctx context.Context, tabID int, key string) (string, error) { return "", nil }
-func (m *MockBrowserClient) SetSessionStorage(ctx context.Context, tabID int, key, value string) error { return nil }
+func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error  { return nil }
+func (m *MockBrowserClient) GetLocalStorage(ctx context.Context, tabID int, key string) (string, error) {
+	return "", nil
+}
+func (m *MockBrowserClient) SetLocalStorage(ctx context.Context, tabID int, key, value string) error {
+	return nil
+}
+func (m *MockBrowserClient) GetSessionStorage(ctx context.Context, tabID int, key string) (string, error) {
+	return "", nil
+}
+func (m *MockBrowserClient) SetSessionStorage(ctx context.Context, tabID int, key, value string) error {
+	return nil
+}
 
 func TestNewServer(t *testing.T) {
 	tests := []struct {
@@ -56,9 +84,9 @@ func TestNewServer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockClient := &MockBrowserClient{}
 			h := handler.NewBrowserHandler(mockClient)
-			
+
 			server := NewServer(tt.srvName, tt.version, h)
-			
+
 			assert.NotNil(t, server)
 			assert.NotNil(t, server.mcpServer)
 			assert.NotNil(t, server.handler)
@@ -94,7 +122,7 @@ func TestServer_ToolRegistration(t *testing.T) {
 			expectedTools: []string{
 				// Tab management
 				"browser_list_tabs",
-				"browser_create_tab", 
+				"browser_create_tab",
 				"browser_close_tab",
 				"browser_activate_tab",
 				// Navigation
@@ -130,7 +158,7 @@ func TestServer_ToolRegistration(t *testing.T) {
 			// Verify server was created
 			require.NotNil(t, server)
 			require.NotNil(t, server.mcpServer)
-			
+
 			// Note: The actual tool registration happens inside the MCP server
 			// which is a third-party library. We're mainly testing that our
 			// registration methods are called without errors.

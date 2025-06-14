@@ -10,8 +10,8 @@ import (
 
 // Server wraps the MCP server with browser automation capabilities
 type Server struct {
-	mcpServer   *server.MCPServer
-	handler     *handler.BrowserHandler
+	mcpServer *server.MCPServer
+	handler   *handler.BrowserHandler
 }
 
 // NewServer creates a new MCP server with browser automation tools
@@ -47,22 +47,22 @@ func (s *Server) registerTools() {
 	s.registerTabCreateTool()
 	s.registerTabCloseTool()
 	s.registerTabActivateTool()
-	
+
 	// Navigation Tools
 	s.registerNavigateTool()
 	s.registerReloadTool()
-	
+
 	// Interaction Tools
 	s.registerClickTool()
 	s.registerTypeTool()
 	s.registerScrollTool()
 	s.registerWaitForElementTool()
-	
+
 	// Content Tools
 	s.registerExecuteScriptTool()
 	s.registerExtractContentTool()
 	s.registerScreenshotTool()
-	
+
 	// Storage Tools
 	s.registerCookieTools()
 	s.registerStorageTools()
@@ -74,7 +74,7 @@ func (s *Server) registerTabListTool() {
 	tool := mcp.NewTool("browser_list_tabs",
 		mcp.WithDescription("List all open browser tabs"),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.ListTabs(ctx, request)
 	})
@@ -90,7 +90,7 @@ func (s *Server) registerTabCreateTool() {
 			mcp.Description("Whether to make the tab active"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.CreateTab(ctx, request)
 	})
@@ -104,7 +104,7 @@ func (s *Server) registerTabCloseTool() {
 			mcp.Description("ID of the tab to close"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.CloseTab(ctx, request)
 	})
@@ -118,7 +118,7 @@ func (s *Server) registerTabActivateTool() {
 			mcp.Description("ID of the tab to activate"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.ActivateTab(ctx, request)
 	})
@@ -140,7 +140,7 @@ func (s *Server) registerNavigateTool() {
 			mcp.Description("Tab ID to navigate in (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Navigate(ctx, request)
 	})
@@ -156,7 +156,7 @@ func (s *Server) registerReloadTool() {
 			mcp.Description("Tab ID to reload (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Reload(ctx, request)
 	})
@@ -178,7 +178,7 @@ func (s *Server) registerClickTool() {
 			mcp.Description("Tab ID to click in (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Click(ctx, request)
 	})
@@ -205,7 +205,7 @@ func (s *Server) registerTypeTool() {
 			mcp.Description("Tab ID to type in (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Type(ctx, request)
 	})
@@ -231,7 +231,7 @@ func (s *Server) registerScrollTool() {
 			mcp.Description("Tab ID to scroll in (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Scroll(ctx, request)
 	})
@@ -255,7 +255,7 @@ func (s *Server) registerWaitForElementTool() {
 			mcp.Description("Tab ID to wait in (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.WaitForElement(ctx, request)
 	})
@@ -277,7 +277,7 @@ func (s *Server) registerExecuteScriptTool() {
 			mcp.Description("Tab ID to execute in (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.ExecuteScript(ctx, request)
 	})
@@ -300,7 +300,7 @@ func (s *Server) registerExtractContentTool() {
 			mcp.Description("Tab ID to extract from (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.ExtractContent(ctx, request)
 	})
@@ -326,7 +326,7 @@ func (s *Server) registerScreenshotTool() {
 			mcp.Description("Tab ID to capture (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Screenshot(ctx, request)
 	})
@@ -345,11 +345,11 @@ func (s *Server) registerCookieTools() {
 			mcp.Description("Specific cookie name"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(getCookiesTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.GetCookies(ctx, request)
 	})
-	
+
 	// Set cookie
 	setCookieTool := mcp.NewTool("browser_set_cookie",
 		mcp.WithDescription("Set a browser cookie"),
@@ -377,11 +377,11 @@ func (s *Server) registerCookieTools() {
 			mcp.Description("Cookie expiration timestamp"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(setCookieTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.SetCookie(ctx, request)
 	})
-	
+
 	// Delete cookies
 	deleteCookiesTool := mcp.NewTool("browser_delete_cookies",
 		mcp.WithDescription("Delete browser cookies"),
@@ -392,7 +392,7 @@ func (s *Server) registerCookieTools() {
 			mcp.Description("Specific cookie name to delete"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(deleteCookiesTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.DeleteCookies(ctx, request)
 	})
@@ -410,11 +410,11 @@ func (s *Server) registerStorageTools() {
 			mcp.Description("Tab ID (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(getLocalStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.GetLocalStorage(ctx, request)
 	})
-	
+
 	// Local storage set
 	setLocalStorageTool := mcp.NewTool("browser_set_local_storage",
 		mcp.WithDescription("Set localStorage item"),
@@ -430,11 +430,11 @@ func (s *Server) registerStorageTools() {
 			mcp.Description("Tab ID (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(setLocalStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.SetLocalStorage(ctx, request)
 	})
-	
+
 	// Session storage get
 	getSessionStorageTool := mcp.NewTool("browser_get_session_storage",
 		mcp.WithDescription("Get sessionStorage item"),
@@ -446,11 +446,11 @@ func (s *Server) registerStorageTools() {
 			mcp.Description("Tab ID (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(getSessionStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.GetSessionStorage(ctx, request)
 	})
-	
+
 	// Session storage set
 	setSessionStorageTool := mcp.NewTool("browser_set_session_storage",
 		mcp.WithDescription("Set sessionStorage item"),
@@ -466,7 +466,7 @@ func (s *Server) registerStorageTools() {
 			mcp.Description("Tab ID (defaults to active tab)"),
 		),
 	)
-	
+
 	s.mcpServer.AddTool(setSessionStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.SetSessionStorage(ctx, request)
 	})
