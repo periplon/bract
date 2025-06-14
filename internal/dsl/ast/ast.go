@@ -32,9 +32,9 @@ type Expression interface {
 
 // ConnectStatement connects to an MCP server
 type ConnectStatement struct {
-	Server     Expression
-	Args       []Expression
-	Options    map[string]Expression
+	Server  Expression
+	Args    []Expression
+	Options map[string]Expression
 }
 
 func (c *ConnectStatement) statementNode() {}
@@ -44,9 +44,9 @@ func (c *ConnectStatement) String() string {
 
 // CallStatement calls an MCP tool
 type CallStatement struct {
-	Tool       string
-	Arguments  Expression
-	Variable   string // Optional: store result in variable
+	Tool      string
+	Arguments Expression
+	Variable  string // Optional: store result in variable
 }
 
 func (c *CallStatement) statementNode() {}

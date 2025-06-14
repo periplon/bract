@@ -110,7 +110,7 @@ func (p *Parser) parseConnect() (ast.Statement, error) {
 	if p.match(TokenLeftBrace) {
 		for !p.check(TokenRightBrace) && !p.isAtEnd() {
 			p.consumeNewlines()
-			
+
 			if p.check(TokenRightBrace) {
 				break
 			}
@@ -151,7 +151,7 @@ func (p *Parser) parseCall() (ast.Statement, error) {
 	if !p.check(TokenIdentifier) && !p.check(TokenString) {
 		return nil, fmt.Errorf("expected tool name after 'call' at line %d", p.peek().Line)
 	}
-	
+
 	toolToken := p.advance()
 	stmt.Tool = toolToken.Value
 
@@ -637,7 +637,7 @@ func (p *Parser) parsePostfix() (ast.Expression, error) {
 			if ident, ok := expr.(*ast.Variable); ok {
 				p.advance() // consume '('
 				args := []ast.Expression{}
-				
+
 				for !p.check(TokenRightParen) && !p.isAtEnd() {
 					arg, err := p.parseExpression()
 					if err != nil {
@@ -699,10 +699,10 @@ func (p *Parser) parsePrimary() (ast.Expression, error) {
 	// Object literal
 	if p.match(TokenLeftBrace) {
 		fields := make(map[string]ast.Expression)
-		
+
 		for !p.check(TokenRightBrace) && !p.isAtEnd() {
 			p.consumeNewlines()
-			
+
 			if p.check(TokenRightBrace) {
 				break
 			}
@@ -744,7 +744,7 @@ func (p *Parser) parsePrimary() (ast.Expression, error) {
 	// Array literal
 	if p.match(TokenLeftBracket) {
 		elements := []ast.Expression{}
-		
+
 		for !p.check(TokenRightBracket) && !p.isAtEnd() {
 			elem, err := p.parseExpression()
 			if err != nil {

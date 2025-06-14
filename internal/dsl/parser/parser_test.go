@@ -130,12 +130,12 @@ func TestParser(t *testing.T) {
 				require.Len(t, script.Statements, 1)
 				conn, ok := script.Statements[0].(*ast.ConnectStatement)
 				require.True(t, ok)
-				
+
 				// Check server
 				server, ok := conn.Server.(*ast.StringLiteral)
 				require.True(t, ok)
 				assert.Equal(t, "/path/to/server", server.Value)
-				
+
 				// Check args
 				require.Len(t, conn.Args, 2)
 			},
@@ -147,10 +147,10 @@ func TestParser(t *testing.T) {
 				require.Len(t, script.Statements, 1)
 				call, ok := script.Statements[0].(*ast.CallStatement)
 				require.True(t, ok)
-				
+
 				assert.Equal(t, "navigate", call.Tool)
 				assert.Equal(t, "page", call.Variable)
-				
+
 				// Check arguments
 				obj, ok := call.Arguments.(*ast.ObjectLiteral)
 				require.True(t, ok)
@@ -166,9 +166,9 @@ func TestParser(t *testing.T) {
 				require.Len(t, script.Statements, 1)
 				assertStmt, ok := script.Statements[0].(*ast.AssertStatement)
 				require.True(t, ok)
-				
+
 				assert.Equal(t, "Expected status to be ok", assertStmt.Message)
-				
+
 				// Check expression
 				binOp, ok := assertStmt.Expression.(*ast.BinaryOp)
 				require.True(t, ok)
@@ -186,12 +186,12 @@ func TestParser(t *testing.T) {
 				require.Len(t, script.Statements, 1)
 				ifStmt, ok := script.Statements[0].(*ast.IfStatement)
 				require.True(t, ok)
-				
+
 				// Check condition
 				cond, ok := ifStmt.Condition.(*ast.BinaryOp)
 				require.True(t, ok)
 				assert.Equal(t, ">", cond.Operator)
-				
+
 				// Check branches
 				require.Len(t, ifStmt.Then, 1)
 				require.Len(t, ifStmt.Else, 1)
@@ -206,14 +206,14 @@ func TestParser(t *testing.T) {
 				require.Len(t, script.Statements, 1)
 				loop, ok := script.Statements[0].(*ast.LoopStatement)
 				require.True(t, ok)
-				
+
 				assert.Equal(t, "item", loop.Iterator)
-				
+
 				// Check collection
 				arr, ok := loop.Collection.(*ast.ArrayLiteral)
 				require.True(t, ok)
 				assert.Len(t, arr.Elements, 3)
-				
+
 				// Check body
 				require.Len(t, loop.Body, 1)
 			},
@@ -226,14 +226,14 @@ func TestParser(t *testing.T) {
 			run test_login("admin", "secret")`,
 			check: func(t *testing.T, script *ast.Script) {
 				require.Len(t, script.Statements, 2)
-				
+
 				// Check define
 				def, ok := script.Statements[0].(*ast.DefineStatement)
 				require.True(t, ok)
 				assert.Equal(t, "test_login", def.Name)
 				assert.Equal(t, []string{"username", "password"}, def.Parameters)
 				require.Len(t, def.Body, 1)
-				
+
 				// Check run
 				run, ok := script.Statements[1].(*ast.RunStatement)
 				require.True(t, ok)
@@ -242,14 +242,14 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name: "complex expression",
+			name:  "complex expression",
 			input: `set result = (a + b) * c / d[0].field`,
 			check: func(t *testing.T, script *ast.Script) {
 				require.Len(t, script.Statements, 1)
 				set, ok := script.Statements[0].(*ast.SetStatement)
 				require.True(t, ok)
 				assert.Equal(t, "result", set.Variable)
-				
+
 				// Value should be a complex expression tree
 				assert.NotNil(t, set.Value)
 			},
@@ -260,7 +260,7 @@ func TestParser(t *testing.T) {
 			print json(result)`,
 			check: func(t *testing.T, script *ast.Script) {
 				require.Len(t, script.Statements, 2)
-				
+
 				// Check len() call
 				set, ok := script.Statements[0].(*ast.SetStatement)
 				require.True(t, ok)
@@ -268,7 +268,7 @@ func TestParser(t *testing.T) {
 				require.True(t, ok)
 				assert.Equal(t, "len", fn.Name)
 				assert.Len(t, fn.Arguments, 1)
-				
+
 				// Check json() call
 				print, ok := script.Statements[1].(*ast.PrintStatement)
 				require.True(t, ok)
@@ -293,12 +293,12 @@ func TestParser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			lexer := NewLexer(tt.input)
 			tokens, err := lexer.Tokenize()
-			
+
 			if tt.wantErr && err != nil {
 				// Lexer error is acceptable for syntax error tests
 				return
 			}
-			
+
 			require.NoError(t, err)
 
 			parser := NewParser(tokens)

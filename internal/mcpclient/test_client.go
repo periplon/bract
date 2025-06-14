@@ -20,7 +20,7 @@ type TestClient struct {
 func NewTestClient(t *testing.T) *TestClient {
 	client, err := NewClient(Config{})
 	require.NoError(t, err)
-	
+
 	return &TestClient{
 		Client: client,
 		t:      t,
@@ -41,12 +41,12 @@ func (tc *TestClient) MustCallTool(ctx context.Context, name string, arguments i
 	result, err := tc.CallTool(ctx, name, arguments)
 	require.NoError(tc.t, err, "tool call failed for %s", name)
 	require.NotNil(tc.t, result, "tool result is nil")
-	
+
 	// Extract the content from the result
 	if len(result.Content) == 0 {
 		return json.RawMessage("{}")
 	}
-	
+
 	// If there's only one content item, return it directly
 	if len(result.Content) == 1 {
 		// Check if it's a text content
@@ -60,7 +60,7 @@ func (tc *TestClient) MustCallTool(ctx context.Context, name string, arguments i
 		require.NoError(tc.t, err)
 		return data
 	}
-	
+
 	// Otherwise return the full content array
 	data, err := json.Marshal(result.Content)
 	require.NoError(tc.t, err)
@@ -71,12 +71,12 @@ func (tc *TestClient) MustCallTool(ctx context.Context, name string, arguments i
 func (tc *TestClient) MustListTools(ctx context.Context) []string {
 	tools, err := tc.ListTools(ctx)
 	require.NoError(tc.t, err, "failed to list tools")
-	
+
 	var names []string
 	for _, tool := range tools {
 		names = append(names, tool.Name)
 	}
-	
+
 	return names
 }
 
@@ -89,11 +89,11 @@ func (tc *TestClient) AssertToolExists(ctx context.Context, toolName string) {
 // AssertToolResult checks if a tool call returns the expected result
 func (tc *TestClient) AssertToolResult(ctx context.Context, toolName string, args interface{}, expected interface{}) {
 	result := tc.MustCallTool(ctx, toolName, args)
-	
+
 	expectedJSON, err := json.Marshal(expected)
 	require.NoError(tc.t, err)
-	
-	require.JSONEq(tc.t, string(expectedJSON), string(result), 
+
+	require.JSONEq(tc.t, string(expectedJSON), string(result),
 		"tool %s returned unexpected result", toolName)
 }
 
@@ -106,9 +106,9 @@ func (tc *TestClient) Cleanup() {
 
 // TestHarness provides a complete test harness for MCP servers
 type TestHarness struct {
-	t         *testing.T
-	client    *TestClient
-	serverCmd string
+	t          *testing.T
+	client     *TestClient
+	serverCmd  string
 	serverArgs []string
 }
 
@@ -170,7 +170,7 @@ func (tc *TestClient) RunToolTests(ctx context.Context, tests []ToolTestCase) {
 func (tc *TestClient) ExpectError(ctx context.Context, toolName string, args interface{}, expectedError string) {
 	_, err := tc.CallTool(ctx, toolName, args)
 	require.Error(tc.t, err, "expected error for tool %s", toolName)
-	require.Contains(tc.t, err.Error(), expectedError, 
+	require.Contains(tc.t, err.Error(), expectedError,
 		"error message doesn't contain expected text")
 }
 

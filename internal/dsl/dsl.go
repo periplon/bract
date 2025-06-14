@@ -123,14 +123,14 @@ func FormatScript(script string) (string, error) {
 func FormatAST(script *ast.Script) string {
 	var sb strings.Builder
 	formatter := &astFormatter{indent: 0}
-	
+
 	for i, stmt := range script.Statements {
 		if i > 0 {
 			sb.WriteString("\n")
 		}
 		formatter.formatStatement(&sb, stmt)
 	}
-	
+
 	return sb.String()
 }
 
@@ -140,7 +140,7 @@ type astFormatter struct {
 
 func (f *astFormatter) formatStatement(sb *strings.Builder, stmt ast.Statement) {
 	f.writeIndent(sb)
-	
+
 	switch s := stmt.(type) {
 	case *ast.ConnectStatement:
 		f.formatConnect(sb, s)
@@ -168,12 +168,12 @@ func (f *astFormatter) formatStatement(sb *strings.Builder, stmt ast.Statement) 
 func (f *astFormatter) formatConnect(sb *strings.Builder, stmt *ast.ConnectStatement) {
 	sb.WriteString("connect ")
 	f.formatExpression(sb, stmt.Server)
-	
+
 	for _, arg := range stmt.Args {
 		sb.WriteString(" ")
 		f.formatExpression(sb, arg)
 	}
-	
+
 	if len(stmt.Options) > 0 {
 		sb.WriteString(" {\n")
 		f.indent++
@@ -194,12 +194,12 @@ func (f *astFormatter) formatConnect(sb *strings.Builder, stmt *ast.ConnectState
 func (f *astFormatter) formatCall(sb *strings.Builder, stmt *ast.CallStatement) {
 	sb.WriteString("call ")
 	sb.WriteString(stmt.Tool)
-	
+
 	if stmt.Arguments != nil {
 		sb.WriteString(" ")
 		f.formatExpression(sb, stmt.Arguments)
 	}
-	
+
 	if stmt.Variable != "" {
 		sb.WriteString(" -> ")
 		sb.WriteString(stmt.Variable)
@@ -210,7 +210,7 @@ func (f *astFormatter) formatCall(sb *strings.Builder, stmt *ast.CallStatement) 
 func (f *astFormatter) formatAssert(sb *strings.Builder, stmt *ast.AssertStatement) {
 	sb.WriteString("assert ")
 	f.formatExpression(sb, stmt.Expression)
-	
+
 	if stmt.Message != "" {
 		sb.WriteString(", ")
 		sb.WriteString(fmt.Sprintf("%q", stmt.Message))
@@ -221,11 +221,11 @@ func (f *astFormatter) formatAssert(sb *strings.Builder, stmt *ast.AssertStateme
 func (f *astFormatter) formatWait(sb *strings.Builder, stmt *ast.WaitStatement) {
 	sb.WriteString("wait ")
 	f.formatExpression(sb, stmt.Condition)
-	
+
 	if stmt.Timeout != nil {
 		sb.WriteString(", ")
 		f.formatExpression(sb, stmt.Timeout)
-		
+
 		if stmt.Interval != nil {
 			sb.WriteString(", ")
 			f.formatExpression(sb, stmt.Interval)
@@ -240,13 +240,13 @@ func (f *astFormatter) formatLoop(sb *strings.Builder, stmt *ast.LoopStatement) 
 	sb.WriteString(" in ")
 	f.formatExpression(sb, stmt.Collection)
 	sb.WriteString(" {\n")
-	
+
 	f.indent++
 	for _, s := range stmt.Body {
 		f.formatStatement(sb, s)
 	}
 	f.indent--
-	
+
 	f.writeIndent(sb)
 	sb.WriteString("}\n")
 }
@@ -255,16 +255,16 @@ func (f *astFormatter) formatIf(sb *strings.Builder, stmt *ast.IfStatement) {
 	sb.WriteString("if ")
 	f.formatExpression(sb, stmt.Condition)
 	sb.WriteString(" {\n")
-	
+
 	f.indent++
 	for _, s := range stmt.Then {
 		f.formatStatement(sb, s)
 	}
 	f.indent--
-	
+
 	f.writeIndent(sb)
 	sb.WriteString("}")
-	
+
 	if len(stmt.Else) > 0 {
 		sb.WriteString(" else ")
 		if len(stmt.Else) == 1 {
@@ -274,7 +274,7 @@ func (f *astFormatter) formatIf(sb *strings.Builder, stmt *ast.IfStatement) {
 				return
 			}
 		}
-		
+
 		sb.WriteString("{\n")
 		f.indent++
 		for _, s := range stmt.Else {
@@ -304,7 +304,7 @@ func (f *astFormatter) formatPrint(sb *strings.Builder, stmt *ast.PrintStatement
 func (f *astFormatter) formatDefine(sb *strings.Builder, stmt *ast.DefineStatement) {
 	sb.WriteString("define ")
 	sb.WriteString(stmt.Name)
-	
+
 	if len(stmt.Parameters) > 0 {
 		sb.WriteString("(")
 		for i, param := range stmt.Parameters {
@@ -315,7 +315,7 @@ func (f *astFormatter) formatDefine(sb *strings.Builder, stmt *ast.DefineStateme
 		}
 		sb.WriteString(")")
 	}
-	
+
 	sb.WriteString(" {\n")
 	f.indent++
 	for _, s := range stmt.Body {
@@ -329,7 +329,7 @@ func (f *astFormatter) formatDefine(sb *strings.Builder, stmt *ast.DefineStateme
 func (f *astFormatter) formatRun(sb *strings.Builder, stmt *ast.RunStatement) {
 	sb.WriteString("run ")
 	sb.WriteString(stmt.Name)
-	
+
 	if len(stmt.Arguments) > 0 {
 		sb.WriteString("(")
 		for i, arg := range stmt.Arguments {

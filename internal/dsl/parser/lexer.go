@@ -69,19 +69,19 @@ const (
 
 // Token represents a lexical token
 type Token struct {
-	Type     TokenType
-	Value    string
-	Line     int
-	Column   int
+	Type   TokenType
+	Value  string
+	Line   int
+	Column int
 }
 
 // Lexer tokenizes DSL input
 type Lexer struct {
-	input   string
-	pos     int
-	line    int
-	column  int
-	tokens  []Token
+	input  string
+	pos    int
+	line   int
+	column int
+	tokens []Token
 }
 
 // NewLexer creates a new lexer

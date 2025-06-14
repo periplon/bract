@@ -18,10 +18,10 @@ func TestRuntime_Variables(t *testing.T) {
 		Variable: "x",
 		Value:    &ast.NumberLiteral{Value: 42},
 	}
-	
+
 	err := rt.executeStatement(ctx, setStmt)
 	require.NoError(t, err)
-	
+
 	// Verify variable was set
 	val, err := rt.evaluateExpression(ctx, &ast.Variable{Name: "x"})
 	require.NoError(t, err)
@@ -148,7 +148,7 @@ func TestRuntime_FieldAccess(t *testing.T) {
 		Object: &ast.Variable{Name: "obj"},
 		Field:  "field1",
 	}
-	
+
 	result, err := rt.evaluateExpression(ctx, expr)
 	require.NoError(t, err)
 	assert.Equal(t, "value1", result)
@@ -161,7 +161,7 @@ func TestRuntime_FieldAccess(t *testing.T) {
 		},
 		Field: "field2",
 	}
-	
+
 	result, err = rt.evaluateExpression(ctx, nestedExpr)
 	require.NoError(t, err)
 	assert.Equal(t, "value2", result)
@@ -179,7 +179,7 @@ func TestRuntime_IndexAccess(t *testing.T) {
 		Object: &ast.Variable{Name: "arr"},
 		Index:  &ast.NumberLiteral{Value: 1},
 	}
-	
+
 	result, err := rt.evaluateExpression(ctx, expr)
 	require.NoError(t, err)
 	assert.Equal(t, "b", result)
@@ -195,7 +195,7 @@ func TestRuntime_IndexAccess(t *testing.T) {
 		Object: &ast.Variable{Name: "map"},
 		Index:  &ast.StringLiteral{Value: "key1"},
 	}
-	
+
 	result, err = rt.evaluateExpression(ctx, mapExpr)
 	require.NoError(t, err)
 	assert.Equal(t, "value1", result)
@@ -207,7 +207,7 @@ func TestRuntime_IfStatement(t *testing.T) {
 
 	// Test if with true condition
 	rt.variables["result"] = ""
-	
+
 	ifStmt := &ast.IfStatement{
 		Condition: &ast.BooleanLiteral{Value: true},
 		Then: []ast.Statement{
@@ -223,14 +223,14 @@ func TestRuntime_IfStatement(t *testing.T) {
 			},
 		},
 	}
-	
+
 	err := rt.executeStatement(ctx, ifStmt)
 	require.NoError(t, err)
 	assert.Equal(t, "then branch", rt.variables["result"])
 
 	// Test if with false condition
 	ifStmt.Condition = &ast.BooleanLiteral{Value: false}
-	
+
 	err = rt.executeStatement(ctx, ifStmt)
 	require.NoError(t, err)
 	assert.Equal(t, "else branch", rt.variables["result"])
@@ -242,7 +242,7 @@ func TestRuntime_LoopStatement(t *testing.T) {
 
 	// Test loop over array
 	rt.variables["sum"] = 0.0
-	
+
 	loopStmt := &ast.LoopStatement{
 		Iterator: "num",
 		Collection: &ast.ArrayLiteral{
@@ -263,7 +263,7 @@ func TestRuntime_LoopStatement(t *testing.T) {
 			},
 		},
 	}
-	
+
 	err := rt.executeStatement(ctx, loopStmt)
 	require.NoError(t, err)
 	assert.Equal(t, 6.0, rt.variables["sum"])
@@ -378,7 +378,7 @@ func TestRuntime_FunctionCalls(t *testing.T) {
 			}
 
 			result, err := rt.evaluateFunctionCall(ctx, tt.funcCall)
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -411,7 +411,7 @@ func TestRuntime_DefineAndRun(t *testing.T) {
 			},
 		},
 	}
-	
+
 	err := rt.executeStatement(ctx, defineStmt)
 	require.NoError(t, err)
 
@@ -423,12 +423,12 @@ func TestRuntime_DefineAndRun(t *testing.T) {
 			&ast.NumberLiteral{Value: 20},
 		},
 	}
-	
+
 	// Since variables in automations are scoped, we need to check
 	// that the automation runs without error
 	err = rt.executeStatement(ctx, runStmt)
 	require.NoError(t, err)
-	
+
 	// Test that automations can be defined and run successfully
 	// The inner scope behavior is correct - variables don't leak out
 	assert.Contains(t, rt.automations, "add_to_sum")
@@ -443,14 +443,14 @@ func TestRuntime_Assert(t *testing.T) {
 		Expression: &ast.BooleanLiteral{Value: true},
 		Message:    "This should pass",
 	}
-	
+
 	err := rt.executeStatement(ctx, assertStmt)
 	assert.NoError(t, err)
 
 	// Test failing assertion
 	assertStmt.Expression = &ast.BooleanLiteral{Value: false}
 	assertStmt.Message = "This should fail"
-	
+
 	err = rt.executeStatement(ctx, assertStmt)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "This should fail")
@@ -464,10 +464,10 @@ func TestRuntime_Print(t *testing.T) {
 	printStmt := &ast.PrintStatement{
 		Expression: &ast.StringLiteral{Value: "Hello, World!"},
 	}
-	
+
 	err := rt.executeStatement(ctx, printStmt)
 	require.NoError(t, err)
-	
+
 	// Check output
 	output := rt.GetOutput()
 	assert.Contains(t, output, "Hello, World!")

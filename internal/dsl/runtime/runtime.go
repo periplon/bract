@@ -324,7 +324,7 @@ func (rt *Runtime) executeRun(ctx context.Context, stmt *ast.RunStatement) error
 
 	// Check argument count
 	if len(stmt.Arguments) != len(automation.Parameters) {
-		return fmt.Errorf("automation '%s' expects %d arguments, got %d", 
+		return fmt.Errorf("automation '%s' expects %d arguments, got %d",
 			stmt.Name, len(automation.Parameters), len(stmt.Arguments))
 	}
 
@@ -506,7 +506,7 @@ func (rt *Runtime) evaluateFunctionCall(ctx context.Context, call *ast.FunctionC
 			return nil, err
 		}
 		return rt.getLength(arg)
-		
+
 	case "str":
 		if len(call.Arguments) != 1 {
 			return nil, fmt.Errorf("str() expects 1 argument, got %d", len(call.Arguments))
@@ -516,7 +516,7 @@ func (rt *Runtime) evaluateFunctionCall(ctx context.Context, call *ast.FunctionC
 			return nil, err
 		}
 		return rt.formatValue(arg), nil
-		
+
 	case "int":
 		if len(call.Arguments) != 1 {
 			return nil, fmt.Errorf("int() expects 1 argument, got %d", len(call.Arguments))
@@ -526,7 +526,7 @@ func (rt *Runtime) evaluateFunctionCall(ctx context.Context, call *ast.FunctionC
 			return nil, err
 		}
 		return rt.toInt(arg)
-		
+
 	case "float":
 		if len(call.Arguments) != 1 {
 			return nil, fmt.Errorf("float() expects 1 argument, got %d", len(call.Arguments))
@@ -536,7 +536,7 @@ func (rt *Runtime) evaluateFunctionCall(ctx context.Context, call *ast.FunctionC
 			return nil, err
 		}
 		return rt.toFloat(arg)
-		
+
 	case "json":
 		if len(call.Arguments) != 1 {
 			return nil, fmt.Errorf("json() expects 1 argument, got %d", len(call.Arguments))
@@ -550,7 +550,7 @@ func (rt *Runtime) evaluateFunctionCall(ctx context.Context, call *ast.FunctionC
 			return nil, fmt.Errorf("failed to marshal to JSON: %w", err)
 		}
 		return string(data), nil
-		
+
 	default:
 		return nil, fmt.Errorf("unknown function: %s", call.Name)
 	}
