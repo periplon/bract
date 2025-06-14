@@ -326,6 +326,7 @@ func mapActionToCommand(action string) string {
 		"goBack":            "tabs.goBack",
 		"goForward":         "tabs.goForward",
 		"executeScript":     "tabs.executeScript",
+		"screenshot":        "tabs.captureScreenshot",
 		"captureScreenshot": "tabs.captureScreenshot",
 		"captureVideo":      "tabs.captureVideo",
 		"extractText":       "tabs.extractText",

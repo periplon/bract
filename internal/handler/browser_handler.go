@@ -273,7 +273,8 @@ func (h *BrowserHandler) ExecuteScript(ctx context.Context, request mcp.CallTool
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to execute script: %v", err)), nil
 	}
 
-	// Return the raw script result as JSON
+	// The result from ExecuteScript is already JSON-encoded
+	// Return it as-is for proper parsing by the DSL runtime
 	return mcp.NewToolResultText(string(result)), nil
 }
 
