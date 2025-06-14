@@ -63,7 +63,7 @@ func main() {
 		}
 
 		if *output != "" {
-			if err := os.WriteFile(*output, []byte(formatted), 0644); err != nil {
+			if err := os.WriteFile(*output, []byte(formatted), 0o644); err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to write output file: %v\n", err)
 				os.Exit(1)
 			}

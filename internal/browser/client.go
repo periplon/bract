@@ -457,7 +457,7 @@ func (c *Client) SetCookie(ctx context.Context, cookie Cookie) (json.RawMessage,
 		"secure":   cookie.Secure,
 		"httpOnly": cookie.HTTPOnly,
 	}
-	
+
 	// Build URL from domain
 	protocol := "http"
 	if cookie.Secure {
@@ -472,11 +472,11 @@ func (c *Client) SetCookie(ctx context.Context, cookie Cookie) (json.RawMessage,
 		domain = domain[1:]
 	}
 	params["url"] = fmt.Sprintf("%s://%s", protocol, domain)
-	
+
 	if cookie.ExpirationDate > 0 {
 		params["expirationDate"] = cookie.ExpirationDate
 	}
-	
+
 	response, err := c.sendCommand(ctx, "setCookie", params)
 	return response, err
 }
@@ -531,7 +531,7 @@ func (c *Client) GetLocalStorage(ctx context.Context, tabID int, key string) (st
 			}
 		}
 	}
-	
+
 	return "", nil
 }
 
@@ -601,7 +601,7 @@ func (c *Client) GetSessionStorage(ctx context.Context, tabID int, key string) (
 			}
 		}
 	}
-	
+
 	return "", nil
 }
 
