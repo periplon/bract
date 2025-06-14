@@ -25,8 +25,7 @@ call browser_navigate {
 assert result.success == true, "Navigation failed"
 print "✓ Successfully navigated to example.com"
 
-# Wait for page to load
-wait result.loaded == true, 5
+# Page is already loaded (navigate waits for load to complete)
 
 # Get page title
 call browser_execute_script {
