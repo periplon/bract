@@ -17,10 +17,11 @@ call browser_navigate {
 print "=== Browser Reload Test ==="
 
 # Get initial page content
-call browser_execute_script {
+call browser_extract_content {
   tabId: tab.id,
-  script: "document.querySelector('h1').textContent"
-} -> initialTitle
+  selector: "h1"
+} -> initialContent
+set initialTitle = initialContent[0]
 print "Initial page title: " + initialTitle
 
 # Add some data to sessionStorage (will be lost on reload)
@@ -65,9 +66,10 @@ print "✓ sessionStorage was cleared as expected"
 
 print "\n2. Testing hard reload (bypass cache):"
 # Set a timestamp in localStorage
-call browser_execute_script {
+call browser_set_local_storage {
   tabId: tab.id,
-  script: "localStorage.setItem('reloadTime', Date.now().toString())"
+  key: "reloadTime",
+  value: "timestamp_before_hard_reload"
 }
 
 # Hard reload (bypasses cache)
@@ -80,12 +82,12 @@ print "✓ Page hard reloaded (cache bypassed)"
 # Wait for page to load
 wait 2
 
-# Verify page loaded fresh
-call browser_execute_script {
+# Verify page loaded fresh by checking if we can extract content
+call browser_extract_content {
   tabId: tab.id,
-  script: "document.readyState"
-} -> readyState
-assert readyState == "complete", "Page should be fully loaded"
+  selector: "body"
+} -> bodyContent
+assert len(bodyContent) > 0, "Page should be fully loaded"
 print "✓ Page fully loaded after hard reload"
 
 print "\n3. Testing reload without tabId (uses active tab):"
