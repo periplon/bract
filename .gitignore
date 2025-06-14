@@ -42,4 +42,5 @@ Thumbs.db
 
 # Local development files
 CLAUDE.md
-PR_TEMPLATE.md
+PR_TEMPLATE.mdcoverage.out
+coverage.html
