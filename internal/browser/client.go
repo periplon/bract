@@ -59,11 +59,11 @@ func (c *Client) WaitForConnection(ctx context.Context, timeout time.Duration) e
 			c.mu.RLock()
 			hasConnection := c.connection != nil
 			c.mu.RUnlock()
-			
+
 			if hasConnection {
 				return nil
 			}
-			
+
 			if time.Now().After(deadline) {
 				return fmt.Errorf("timeout waiting for Chrome extension connection")
 			}

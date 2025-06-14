@@ -28,12 +28,12 @@ func NewBrowserHandler(client BrowserClient) *BrowserHandler {
 // WaitForConnection waits for the browser extension to connect
 func (h *BrowserHandler) WaitForConnection(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	timeout := time.Duration(request.GetFloat("timeout", 30)) * time.Second
-	
+
 	err := h.client.WaitForConnection(ctx, timeout)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to connect to browser: %v", err)), nil
 	}
-	
+
 	return mcp.NewToolResultText("Successfully connected to browser extension"), nil
 }
 

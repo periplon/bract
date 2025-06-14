@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/periplon/bract/internal/browser"
 	"github.com/periplon/bract/internal/handler"
@@ -18,7 +19,10 @@ func (m *MockBrowserClient) SetConnection(conn browser.Connection)              
 func (m *MockBrowserClient) RemoveConnection(conn browser.Connection)                      {}
 func (m *MockBrowserClient) HandleResponse(id string, data json.RawMessage, errMsg string) {}
 func (m *MockBrowserClient) HandleEvent(action string, data json.RawMessage)               {}
-func (m *MockBrowserClient) ListTabs(ctx context.Context) ([]browser.Tab, error)           { return nil, nil }
+func (m *MockBrowserClient) WaitForConnection(ctx context.Context, timeout time.Duration) error {
+	return nil
+}
+func (m *MockBrowserClient) ListTabs(ctx context.Context) ([]browser.Tab, error) { return nil, nil }
 func (m *MockBrowserClient) CreateTab(ctx context.Context, url string, active bool) (*browser.Tab, error) {
 	return nil, nil
 }

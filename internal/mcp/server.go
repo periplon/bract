@@ -44,7 +44,7 @@ func (s *Server) Start() error {
 func (s *Server) registerTools() {
 	// Connection Tools
 	s.registerWaitForConnectionTool()
-	
+
 	// Tab Management Tools
 	s.registerTabListTool()
 	s.registerTabCreateTool()
