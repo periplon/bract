@@ -24,7 +24,7 @@ define PageObject(tabId) {
       tabId: this_tab,
       selector: selector
     } -> content
-    set result = content.text
+    set result = content[0]
   }
   
   # Helper to fill input
@@ -78,8 +78,8 @@ define test_search_functionality(searchTerm) {
     script: "document.querySelectorAll('.result').length"
   } -> resultCount
   
-  print "Found " + str(resultCount.result) + " results"
-  assert resultCount.result > 0, "No search results found"
+  print "Found " + str(resultCount) + " results"
+  assert resultCount > 0, "No search results found"
   
   # Clean up
   call close_tab {tabId: tab.id}

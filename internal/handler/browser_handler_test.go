@@ -304,7 +304,7 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				
+
 				// Should return JSON array
 				var tabsResult []browser.Tab
 				err := json.Unmarshal([]byte(text), &tabsResult)
@@ -485,25 +485,14 @@ func TestBrowserHandler_Screenshot(t *testing.T) {
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
-				require.Len(t, result.Content, 2) // Text + Image
-
-				// First content should be text
+				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Equal(t, "Screenshot captured", text)
 
-				// Second content should be image
-				var imageContent mcp.ImageContent
-				switch ic := result.Content[1].(type) {
-				case *mcp.ImageContent:
-					imageContent = *ic
-				case mcp.ImageContent:
-					imageContent = ic
-				default:
-					t.Fatalf("Expected ImageContent type, got %T", result.Content[1])
-				}
-				assert.Equal(t, "image", imageContent.Type)
-				assert.Equal(t, "image/png", imageContent.MIMEType)
-				assert.Equal(t, "iVBORw0KGgoAAAANS", imageContent.Data)
+				// Should return JSON with dataUrl
+				var screenshotResult map[string]string
+				err := json.Unmarshal([]byte(text), &screenshotResult)
+				require.NoError(t, err)
+				assert.Contains(t, screenshotResult["dataUrl"], "data:image/png;base64,iVBORw0KGgoAAAANS")
 			},
 		},
 		{
@@ -525,23 +514,14 @@ func TestBrowserHandler_Screenshot(t *testing.T) {
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
-				require.Len(t, result.Content, 2) // Text + Image
-
-				// First content should be text
+				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Equal(t, "Screenshot captured", text)
 
-				// Second content should be image
-				var imageContent mcp.ImageContent
-				switch ic := result.Content[1].(type) {
-				case *mcp.ImageContent:
-					imageContent = *ic
-				case mcp.ImageContent:
-					imageContent = ic
-				default:
-					t.Fatalf("Expected ImageContent type, got %T", result.Content[1])
-				}
-				assert.Equal(t, "image/jpeg", imageContent.MIMEType)
+				// Should return JSON with dataUrl
+				var screenshotResult map[string]string
+				err := json.Unmarshal([]byte(text), &screenshotResult)
+				require.NoError(t, err)
+				assert.Contains(t, screenshotResult["dataUrl"], "data:image/jpeg;base64,/9j/4AAQSkZJRg")
 			},
 		},
 	}

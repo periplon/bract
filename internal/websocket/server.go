@@ -40,7 +40,7 @@ type Message struct {
 	Command string          `json:"command,omitempty"` // Chrome extension expects 'command' field
 	Action  string          `json:"action,omitempty"`  // Keep for backward compatibility
 	Data    json.RawMessage `json:"data,omitempty"`
-	Result  json.RawMessage `json:"result,omitempty"`  // Chrome extension sends responses with 'result' field
+	Result  json.RawMessage `json:"result,omitempty"` // Chrome extension sends responses with 'result' field
 	Params  json.RawMessage `json:"params,omitempty"` // Chrome extension uses 'params' for data
 	Error   string          `json:"error,omitempty"`
 }

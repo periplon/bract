@@ -56,8 +56,10 @@ func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage 
 func (m *MockBrowserClient) GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error) {
 	return nil, nil
 }
-func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error) { return nil, nil }
-func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error  { return nil }
+func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error) {
+	return nil, nil
+}
+func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error { return nil }
 func (m *MockBrowserClient) GetLocalStorage(ctx context.Context, tabID int, key string) (string, error) {
 	return "", nil
 }

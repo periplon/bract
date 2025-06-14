@@ -45,7 +45,7 @@ define test_form(url, username, password) {
     selector: ".message, .error, .success"
   } -> result
   
-  print "Form submission result: " + result.text
+  print "Form submission result: " + result[0]
   
   # Clean up
   call close_tab {tabId: tab.id}
