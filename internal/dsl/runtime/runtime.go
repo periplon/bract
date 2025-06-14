@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/periplon/bract/internal/dsl/ast"
 	"github.com/periplon/bract/internal/mcpclient"
 )
@@ -159,11 +160,41 @@ func (rt *Runtime) executeCall(ctx context.Context, stmt *ast.CallStatement) err
 		// Extract content from result
 		var resultValue interface{}
 		if len(result.Content) == 1 {
-			// Single content item - store it directly
-			resultValue = result.Content[0]
+			// Single content item - process it
+			content := result.Content[0]
+			// Check if it's a TextContent with JSON data
+			if textContent, ok := content.(mcp.TextContent); ok {
+				// Try to parse as JSON
+				var jsonData interface{}
+				if err := json.Unmarshal([]byte(textContent.Text), &jsonData); err == nil {
+					resultValue = jsonData
+				} else {
+					// Not JSON, store as plain text
+					resultValue = textContent.Text
+				}
+			} else {
+				// Not TextContent, store as is
+				resultValue = content
+			}
 		} else {
-			// Multiple content items - store as array
-			resultValue = result.Content
+			// Multiple content items - process each one
+			items := make([]interface{}, len(result.Content))
+			for i, content := range result.Content {
+				if textContent, ok := content.(mcp.TextContent); ok {
+					// Try to parse as JSON
+					var jsonData interface{}
+					if err := json.Unmarshal([]byte(textContent.Text), &jsonData); err == nil {
+						items[i] = jsonData
+					} else {
+						// Not JSON, store as plain text
+						items[i] = textContent.Text
+					}
+				} else {
+					// Not TextContent, store as is
+					items[i] = content
+				}
+			}
+			resultValue = items
 		}
 		rt.variables[stmt.Variable] = resultValue
 	}
