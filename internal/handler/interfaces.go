@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/periplon/bract/internal/browser"
 )
@@ -14,6 +15,7 @@ type BrowserClient interface {
 	RemoveConnection(conn browser.Connection)
 	HandleResponse(id string, data json.RawMessage, errMsg string)
 	HandleEvent(action string, data json.RawMessage)
+	WaitForConnection(ctx context.Context, timeout time.Duration) error
 
 	// Tab management
 	ListTabs(ctx context.Context) ([]browser.Tab, error)

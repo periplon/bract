@@ -2,7 +2,7 @@
 # This script tests basic connectivity and tool listing
 
 # Connect to the MCP browser server
-connect "./mcp-browser-server"
+connect "./bin/mcp-browser-server"
 
 # List available tools
 call list_tools -> tools
