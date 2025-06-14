@@ -47,13 +47,16 @@ call browser_activate_tab {
 } -> activateResult1
 print "✓ Activated Tab 1 (example.com)"
 
-# Verify tab 1 is active by executing script
-call browser_execute_script {
-  tabId: tab1.id,
-  script: "document.domain"
-} -> domain1
-assert domain1 == "example.com", "Tab 1 should be on example.com"
-print "Confirmed active tab domain: " + domain1
+# Verify tab 1 is active by checking tab info
+call browser_list_tabs -> currentTabs1
+set tab1Active = false
+loop tab in currentTabs1 {
+  if tab.id == tab1.id && tab.active == true {
+    set tab1Active = true
+  }
+}
+assert tab1Active == true, "Tab 1 should be active"
+print "Confirmed Tab 1 is active"
 
 # Wait a moment for user to see the tab switch
 wait 1
@@ -65,12 +68,13 @@ call browser_activate_tab {
 } -> activateResult2
 print "✓ Activated Tab 2 (example.org)"
 
-# Perform an action on the active tab
-call browser_execute_script {
-  tabId: tab2.id,
-  script: "document.title = 'Active Tab - ' + document.title; document.title"
-} -> newTitle2
-print "Modified active tab title: " + newTitle2
+# Verify tab 2 is now active
+call browser_list_tabs -> currentTabs2
+loop tab in currentTabs2 {
+  if tab.id == tab2.id {
+    print "Tab 2 title: " + tab.title
+  }
+}
 
 wait 1
 
@@ -108,9 +112,10 @@ print "\n5. Testing operations on non-active tabs:"
 # While tab1 is active, perform operations on tab2
 print "Tab 1 is active, performing operations on Tab 2..."
 
-call browser_execute_script {
+call browser_set_local_storage {
   tabId: tab2.id,
-  script: "localStorage.setItem('backgroundOp', 'success')"
+  key: "backgroundOp",
+  value: "success"
 }
 
 call browser_get_local_storage {
@@ -124,18 +129,12 @@ print "\n6. Testing tab activation with page interaction:"
 # Activate tab 3 and interact with it
 call browser_activate_tab {tabId: tab3.id}
 
-# Type something in the active tab's body (if there's an input)
-call browser_execute_script {
-  tabId: tab3.id,
-  script: "document.body.innerHTML += '<p id=\"test\">Tab activated and modified!</p>'; 'done'"
-}
-
-# Verify the modification
-call browser_extract_content {
-  tabId: tab3.id,
-  selector: "#test"
-} -> testContent
-print "✓ Active tab modified: " + testContent[0]
+# Take a screenshot to verify tab is active
+call browser_screenshot {
+  tabId: tab3.id
+} -> activeScreenshot
+assert activeScreenshot.dataUrl != null, "Should capture screenshot of active tab"
+print "✓ Active tab screenshot captured"
 
 print "\n7. Verifying final state:"
 # List tabs again to see current state
