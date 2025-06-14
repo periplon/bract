@@ -42,6 +42,9 @@ func (s *Server) Start() error {
 
 // registerTools registers all browser automation tools
 func (s *Server) registerTools() {
+	// Connection Tools
+	s.registerWaitForConnectionTool()
+
 	// Tab Management Tools
 	s.registerTabListTool()
 	s.registerTabCreateTool()
@@ -66,6 +69,21 @@ func (s *Server) registerTools() {
 	// Storage Tools
 	s.registerCookieTools()
 	s.registerStorageTools()
+}
+
+// Connection Tools
+
+func (s *Server) registerWaitForConnectionTool() {
+	tool := mcp.NewTool("browser_wait_for_connection",
+		mcp.WithDescription("Wait for the browser extension to connect"),
+		mcp.WithNumber("timeout",
+			mcp.Description("Timeout in seconds (default: 30)"),
+		),
+	)
+
+	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.WaitForConnection(ctx, request)
+	})
 }
 
 // Tab Management Tools

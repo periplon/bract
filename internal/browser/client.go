@@ -45,6 +45,32 @@ func (c *Client) SetConnection(conn Connection) {
 	c.connection = conn
 }
 
+// WaitForConnection waits for the WebSocket connection to be established
+func (c *Client) WaitForConnection(ctx context.Context, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			c.mu.RLock()
+			hasConnection := c.connection != nil
+			c.mu.RUnlock()
+
+			if hasConnection {
+				return nil
+			}
+
+			if time.Now().After(deadline) {
+				return fmt.Errorf("timeout waiting for Chrome extension connection")
+			}
+		}
+	}
+}
+
 // RemoveConnection removes the WebSocket connection
 func (c *Client) RemoveConnection(conn Connection) {
 	c.mu.Lock()

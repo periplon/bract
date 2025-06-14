@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/periplon/bract/internal/browser"
@@ -32,6 +33,11 @@ func (m *MockBrowserClient) HandleResponse(id string, data json.RawMessage, errM
 
 func (m *MockBrowserClient) HandleEvent(action string, data json.RawMessage) {
 	m.Called(action, data)
+}
+
+func (m *MockBrowserClient) WaitForConnection(ctx context.Context, timeout time.Duration) error {
+	args := m.Called(ctx, timeout)
+	return args.Error(0)
 }
 
 func (m *MockBrowserClient) ListTabs(ctx context.Context) ([]browser.Tab, error) {
@@ -166,6 +172,103 @@ func TestNewBrowserHandler(t *testing.T) {
 
 	assert.NotNil(t, handler)
 	assert.Equal(t, mockClient, handler.client)
+}
+
+func TestBrowserHandler_WaitForConnection(t *testing.T) {
+	tests := []struct {
+		name        string
+		request     mcp.CallToolRequest
+		setupMock   func(*MockBrowserClient)
+		wantErr     bool
+		checkResult func(*testing.T, *mcp.CallToolResult)
+	}{
+		{
+			name: "wait for connection successfully",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_wait_for_connection",
+					Arguments: map[string]interface{}{
+						"timeout": 5.0,
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("WaitForConnection", mock.Anything, 5*time.Second).Return(nil)
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Successfully connected to browser extension")
+			},
+		},
+		{
+			name: "wait for connection with default timeout",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_wait_for_connection",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("WaitForConnection", mock.Anything, 30*time.Second).Return(nil)
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Successfully connected to browser extension")
+			},
+		},
+		{
+			name: "wait for connection timeout",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_wait_for_connection",
+					Arguments: map[string]interface{}{
+						"timeout": 2.0,
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("WaitForConnection", mock.Anything, 2*time.Second).Return(errors.New("timeout waiting for Chrome extension connection"))
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Failed to connect to browser")
+				assert.Contains(t, text, "timeout")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := &MockBrowserClient{}
+			handler := NewBrowserHandler(mockClient)
+
+			if tt.setupMock != nil {
+				tt.setupMock(mockClient)
+			}
+
+			result, err := handler.WaitForConnection(context.Background(), tt.request)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
+			}
+
+			mockClient.AssertExpectations(t)
+		})
+	}
 }
 
 func TestBrowserHandler_ListTabs(t *testing.T) {
