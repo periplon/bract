@@ -7,7 +7,7 @@ A Model Context Protocol (MCP) server implementation in Go that enables browser 
 ```
 ┌─────────────────┐     stdio/SSE       ┌─────────────────┐     WebSocket     ┌─────────────────┐
 │   MCP Client    │ ◄─────────────────► │   MCP Server    │ ◄───────────────► │Chrome Extension │
-│  (LLM/Claude)   │                     │   (Go Server)   │    (Port 8765)    │                 │
+│      (LLM)      │                     │   (Go Server)   │    (Port 8765)    │                 │
 └─────────────────┘                     └─────────────────┘                   └─────────────────┘
 ```
 
@@ -141,9 +141,9 @@ The server exposes the following MCP tools:
 - `browser_get_session_storage` - Get sessionStorage value
 - `browser_set_session_storage` - Set sessionStorage value
 
-### Example Usage with Claude Desktop
+### Example Usage with MCP Clients
 
-1. Add the server to your Claude Desktop configuration:
+1. Add the server to your MCP client configuration:
 
 ```json
 {
@@ -155,9 +155,9 @@ The server exposes the following MCP tools:
 }
 ```
 
-2. Use browser automation in Claude:
+2. Example automation request:
 ```
-Can you navigate to https://example.com and take a screenshot?
+Navigate to https://example.com and take a screenshot
 ```
 
 ## Chrome Extension Integration

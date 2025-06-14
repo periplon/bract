@@ -37,7 +37,8 @@ go build -o bin/bract cmd/mcp-server/main.go
 ## Documentation
 
 - [Product Requirements Document](docs/PRD-mcp-browser-automation-server.md)
-- [Development Guidelines](CLAUDE.md)
+- [MCP Browser Server Guide](docs/MCP_BROWSER_SERVER.md)
+- [MCP Test DSL Documentation](docs/MCP_TEST_DSL.md)
 
 ## Project Status
 
@@ -45,7 +46,7 @@ go build -o bin/bract cmd/mcp-server/main.go
 
 ## Contributing
 
-Please read our [development guidelines](CLAUDE.md) before contributing. We follow conventional commits and semantic versioning.
+We welcome contributions! Please follow conventional commits and semantic versioning when submitting pull requests.
 
 ## License
 
