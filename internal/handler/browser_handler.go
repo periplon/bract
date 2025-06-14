@@ -12,11 +12,11 @@ import (
 
 // BrowserHandler handles browser automation tool requests
 type BrowserHandler struct {
-	client *browser.Client
+	client BrowserClient
 }
 
 // NewBrowserHandler creates a new browser handler
-func NewBrowserHandler(client *browser.Client) *BrowserHandler {
+func NewBrowserHandler(client BrowserClient) *BrowserHandler {
 	return &BrowserHandler{
 		client: client,
 	}
@@ -232,7 +232,13 @@ func (h *BrowserHandler) ExecuteScript(ctx context.Context, request mcp.CallTool
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	args := request.GetArray("args", []interface{}{})
+	// Get args as raw arguments and convert to slice
+	var args []interface{}
+	if rawArgs := request.GetArguments()["args"]; rawArgs != nil {
+		if argsSlice, ok := rawArgs.([]interface{}); ok {
+			args = argsSlice
+		}
+	}
 	tabID := request.GetInt("tabId", 0)
 
 	result, err := h.client.ExecuteScript(ctx, tabID, script, args)
@@ -297,14 +303,21 @@ func (h *BrowserHandler) Screenshot(ctx context.Context, request mcp.CallToolReq
 	}
 
 	// Return as image content
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			{
-				Type: "image",
-				Data: dataURL,
-			},
-		},
-	}, nil
+	// Extract MIME type from data URL (format: data:image/png;base64,...)
+	mimeType := "image/png" // default
+	if len(dataURL) > 5 && strings.HasPrefix(dataURL, "data:") {
+		if idx := strings.Index(dataURL, ";"); idx > 5 {
+			mimeType = dataURL[5:idx]
+		}
+	}
+	
+	// Extract base64 data from data URL
+	imageData := dataURL
+	if idx := strings.Index(dataURL, ","); idx > 0 {
+		imageData = dataURL[idx+1:]
+	}
+	
+	return mcp.NewToolResultImage("Screenshot captured", imageData, mimeType), nil
 }
 
 // Storage Handlers
