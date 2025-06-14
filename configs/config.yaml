@@ -1,0 +1,17 @@
+server:
+  name: "MCP Browser Automation Server"
+  version: "1.0.0"
+
+websocket:
+  host: localhost
+  port: 8765
+  reconnect_ms: 5000
+  ping_interval: 30
+
+browser:
+  default_timeout: 30000
+  max_tabs: 100
+
+logging:
+  level: info
+  format: json
