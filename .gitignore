@@ -39,3 +39,7 @@ Thumbs.db
 # Build output
 /bin/
 /dist/
+
+# Local development files
+CLAUDE.md
+PR_TEMPLATE.md
