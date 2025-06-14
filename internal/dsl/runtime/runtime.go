@@ -119,6 +119,25 @@ func (rt *Runtime) executeCall(ctx context.Context, stmt *ast.CallStatement) err
 		return fmt.Errorf("not connected to any MCP server")
 	}
 
+	// Handle special built-in tools
+	if stmt.Tool == "list_tools" {
+		tools, err := rt.client.ListTools(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list tools: %w", err)
+		}
+
+		// Store result if variable specified
+		if stmt.Variable != "" {
+			// Convert tools to a simple list of names
+			toolNames := make([]interface{}, len(tools))
+			for i, tool := range tools {
+				toolNames[i] = tool.Name
+			}
+			rt.variables[stmt.Variable] = toolNames
+		}
+		return nil
+	}
+
 	// Evaluate arguments
 	var args interface{}
 	if stmt.Arguments != nil {
