@@ -329,6 +329,7 @@ func mapActionToCommand(action string) string {
 		"captureScreenshot": "tabs.captureScreenshot",
 		"captureVideo":      "tabs.captureVideo",
 		"extractText":       "tabs.extractText",
+		"extractContent":    "tabs.extractText",
 		"findElements":      "tabs.findElements",
 		"click":             "tabs.click",
 		"type":              "tabs.type",

@@ -361,12 +361,29 @@ func (c *Client) ExtractContent(ctx context.Context, tabID int, selector, conten
 		return nil, err
 	}
 
-	var results []string
-	if err := json.Unmarshal(data, &results); err != nil {
+	// Browser extension returns {text: ...}
+	var response struct {
+		Text interface{} `json:"text"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, err
 	}
 
-	return results, nil
+	// Handle both string and array responses
+	switch v := response.Text.(type) {
+	case string:
+		return []string{v}, nil
+	case []interface{}:
+		results := make([]string, len(v))
+		for i, item := range v {
+			if str, ok := item.(string); ok {
+				results[i] = str
+			}
+		}
+		return results, nil
+	default:
+		return nil, fmt.Errorf("unexpected response type: %T", response.Text)
+	}
 }
 
 // Screenshot takes a screenshot

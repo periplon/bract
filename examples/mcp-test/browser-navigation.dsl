@@ -33,14 +33,14 @@ call browser_execute_script {
   script: "document.title"
 } -> title
 
-print "Page title: " + title.result
+print "Page title: " + title
 
 # Take a screenshot
 call browser_screenshot {
   tabId: tab.id
 } -> screenshot
 
-assert screenshot.data != null, "Screenshot failed"
+assert screenshot.dataUrl != null, "Screenshot failed"
 print "✓ Screenshot captured"
 
 # Extract page content
@@ -49,7 +49,7 @@ call browser_extract_content {
   selector: "body"
 } -> content
 
-print "Page content length: " + str(len(content.text))
+print "Page content length: " + str(len(content[0]))
 
 # Clean up - close the tab
 call browser_close_tab {

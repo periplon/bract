@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/periplon/bract/internal/browser"
-	"time"
 )
 
 // BrowserHandler handles browser automation tool requests
@@ -312,22 +311,14 @@ func (h *BrowserHandler) Screenshot(ctx context.Context, request mcp.CallToolReq
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to take screenshot: %v", err)), nil
 	}
 
-	// Return as image content
-	// Extract MIME type from data URL (format: data:image/png;base64,...)
-	mimeType := "image/png" // default
-	if len(dataURL) > 5 && strings.HasPrefix(dataURL, "data:") {
-		if idx := strings.Index(dataURL, ";"); idx > 5 {
-			mimeType = dataURL[5:idx]
-		}
+	// Return screenshot data as JSON
+	result := map[string]string{"dataUrl": dataURL}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize screenshot: %v", err)), nil
 	}
 
-	// Extract base64 data from data URL
-	imageData := dataURL
-	if idx := strings.Index(dataURL, ","); idx > 0 {
-		imageData = dataURL[idx+1:]
-	}
-
-	return mcp.NewToolResultImage("Screenshot captured", imageData, mimeType), nil
+	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // Storage Handlers
