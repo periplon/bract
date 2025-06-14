@@ -282,7 +282,7 @@ func (c *Client) Type(ctx context.Context, tabID int, selector, text string, cle
 }
 
 // Scroll scrolls the page
-func (c *Client) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error {
+func (c *Client) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error) {
 	if tabID == 0 {
 		tabID = c.activeTabID
 	}
@@ -302,12 +302,12 @@ func (c *Client) Scroll(ctx context.Context, tabID int, x, y *float64, selector,
 		params["selector"] = selector
 	}
 
-	_, err := c.sendCommand(ctx, "scroll", params)
-	return err
+	response, err := c.sendCommand(ctx, "scroll", params)
+	return response, err
 }
 
 // WaitForElement waits for an element to appear
-func (c *Client) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error {
+func (c *Client) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error) {
 	if tabID == 0 {
 		tabID = c.activeTabID
 	}
@@ -319,8 +319,8 @@ func (c *Client) WaitForElement(ctx context.Context, tabID int, selector string,
 		"state":    state,
 	}
 
-	_, err := c.sendCommand(ctx, "waitForElement", params)
-	return err
+	response, err := c.sendCommand(ctx, "waitForElement", params)
+	return response, err
 }
 
 // Content Methods
@@ -427,9 +427,9 @@ func (c *Client) GetCookies(ctx context.Context, url, name string) ([]Cookie, er
 }
 
 // SetCookie sets a browser cookie
-func (c *Client) SetCookie(ctx context.Context, cookie Cookie) error {
-	_, err := c.sendCommand(ctx, "setCookie", cookie)
-	return err
+func (c *Client) SetCookie(ctx context.Context, cookie Cookie) (json.RawMessage, error) {
+	response, err := c.sendCommand(ctx, "setCookie", cookie)
+	return response, err
 }
 
 // DeleteCookies deletes browser cookies

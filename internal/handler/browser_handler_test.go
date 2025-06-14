@@ -86,14 +86,20 @@ func (m *MockBrowserClient) Type(ctx context.Context, tabID int, selector, text 
 	return args.Error(0)
 }
 
-func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error {
+func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error) {
 	args := m.Called(ctx, tabID, x, y, selector, behavior)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
 }
 
-func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error {
+func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error) {
 	args := m.Called(ctx, tabID, selector, timeout, state)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
 }
 
 func (m *MockBrowserClient) ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error) {
@@ -125,9 +131,12 @@ func (m *MockBrowserClient) GetCookies(ctx context.Context, url, name string) ([
 	return args.Get(0).([]browser.Cookie), args.Error(1)
 }
 
-func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) error {
+func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error) {
 	args := m.Called(ctx, cookie)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
 }
 
 func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string) error {
@@ -295,9 +304,15 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Found 2 open tabs")
-				assert.Contains(t, text, "Tab 1 [ACTIVE]")
-				assert.Contains(t, text, "Example")
+				
+				// Should return JSON array
+				var tabsResult []browser.Tab
+				err := json.Unmarshal([]byte(text), &tabsResult)
+				require.NoError(t, err)
+				assert.Len(t, tabsResult, 2)
+				assert.Equal(t, 1, tabsResult[0].ID)
+				assert.Equal(t, "Example", tabsResult[0].Title)
+				assert.True(t, tabsResult[0].Active)
 			},
 		},
 		{
@@ -583,7 +598,8 @@ func TestBrowserHandler_ExecuteScript(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Script result: Page Title")
+				// Should return raw JSON result
+				assert.Equal(t, `"Page Title"`, text)
 			},
 		},
 		{
@@ -606,7 +622,8 @@ func TestBrowserHandler_ExecuteScript(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Script result: 3")
+				// Should return raw JSON result
+				assert.Equal(t, "3", text)
 			},
 		},
 		{

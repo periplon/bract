@@ -30,8 +30,8 @@ type BrowserClient interface {
 	// Interaction
 	Click(ctx context.Context, tabID int, selector string, timeout int) error
 	Type(ctx context.Context, tabID int, selector, text string, clearFirst bool, delay int) error
-	Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) error
-	WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) error
+	Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error)
+	WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error)
 
 	// Content
 	ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error)
@@ -40,7 +40,7 @@ type BrowserClient interface {
 
 	// Storage
 	GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error)
-	SetCookie(ctx context.Context, cookie browser.Cookie) error
+	SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error)
 	DeleteCookies(ctx context.Context, url, name string) error
 	GetLocalStorage(ctx context.Context, tabID int, key string) (string, error)
 	SetLocalStorage(ctx context.Context, tabID int, key, value string) error
