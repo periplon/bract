@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,10 +17,11 @@ import (
 
 // Server handles WebSocket connections from Chrome extensions
 type Server struct {
-	port          int
-	browserClient *browser.Client
-	upgrader      websocket.Upgrader
-	connections   sync.Map // map[string]*Connection
+	port           int
+	browserClient  *browser.Client
+	upgrader       websocket.Upgrader
+	connections    sync.Map // map[string]*Connection
+	allowedOrigins []string
 }
 
 // Connection represents a WebSocket connection to a Chrome extension
@@ -28,7 +30,6 @@ type Connection struct {
 	conn      *websocket.Conn
 	send      chan []byte
 	server    *Server
-	mu        sync.Mutex
 	pingTimer *time.Timer
 }
 
@@ -42,21 +43,53 @@ type Message struct {
 }
 
 // NewServer creates a new WebSocket server
-func NewServer(port int, browserClient *browser.Client) *Server {
-	return &Server{
-		port:          port,
-		browserClient: browserClient,
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				// Only allow connections from Chrome extensions
-				origin := r.Header.Get("Origin")
-				return origin == "" || 
-					   origin == "chrome-extension://"+r.Header.Get("X-Extension-Id") ||
-					   origin == "http://localhost" ||
-					   origin == "https://localhost"
-			},
-		},
+func NewServer(port int, browserClient *browser.Client, allowedOrigins []string) *Server {
+	s := &Server{
+		port:           port,
+		browserClient:  browserClient,
+		allowedOrigins: allowedOrigins,
 	}
+
+	s.upgrader = websocket.Upgrader{
+		CheckOrigin: s.checkOrigin,
+	}
+
+	return s
+}
+
+// checkOrigin validates the origin of WebSocket connections
+func (s *Server) checkOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+
+	// Allow empty origin (same-origin requests)
+	if origin == "" {
+		return true
+	}
+
+	// Check against allowed origins from config
+	for _, allowed := range s.allowedOrigins {
+		// Handle wildcard Chrome extension origins
+		if allowed == "chrome-extension://*" && strings.HasPrefix(origin, "chrome-extension://") {
+			return true
+		}
+
+		// Handle localhost with any port
+		if allowed == "http://localhost" && strings.HasPrefix(origin, "http://localhost") {
+			return true
+		}
+		if allowed == "https://localhost" && strings.HasPrefix(origin, "https://localhost") {
+			return true
+		}
+
+		// Exact match
+		if origin == allowed {
+			return true
+		}
+	}
+
+	// Log rejected origins for debugging
+	log.Printf("Rejected WebSocket connection from origin: %s", origin)
+	return false
 }
 
 // Start starts the WebSocket server
@@ -83,7 +116,7 @@ func (s *Server) Start(ctx context.Context) error {
 // handleHealth provides a health check endpoint
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK"))
 }
 
 // handleWebSocket handles WebSocket upgrade and connection
@@ -125,9 +158,13 @@ func (c *Connection) readPump() {
 		log.Printf("WebSocket connection closed: %s", c.ID)
 	}()
 
-	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	if err := c.conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		log.Printf("Failed to set read deadline: %v", err)
+	}
 	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err := c.conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			log.Printf("Failed to set read deadline in pong handler: %v", err)
+		}
 		return nil
 	})
 
@@ -151,16 +188,20 @@ func (c *Connection) readPump() {
 			c.server.browserClient.HandleEvent(msg.Action, msg.Data)
 		case "ping":
 			// Respond to ping
-			c.SendMessage(&Message{
+			if err := c.SendMessage(&Message{
 				ID:   msg.ID,
 				Type: "pong",
-			})
+			}); err != nil {
+				log.Printf("Failed to send pong message: %v", err)
+			}
 		default:
 			log.Printf("Unknown message type: %s", msg.Type)
 		}
 
 		// Reset read deadline
-		c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err := c.conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			log.Printf("Failed to reset read deadline: %v", err)
+		}
 	}
 }
 
@@ -175,16 +216,25 @@ func (c *Connection) writePump() {
 	for {
 		select {
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				log.Printf("Failed to set write deadline: %v", err)
+				return
+			}
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			c.conn.WriteMessage(websocket.TextMessage, message)
+			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				log.Printf("Failed to write message: %v", err)
+				return
+			}
 
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				log.Printf("Failed to set write deadline for ping: %v", err)
+				return
+			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
@@ -210,7 +260,7 @@ func (c *Connection) SendMessage(msg *Message) error {
 // SendCommand sends a command to the Chrome extension and returns the message ID
 func (c *Connection) SendCommand(action string, data interface{}) (string, error) {
 	msgID := uuid.New().String()
-	
+
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return "", err

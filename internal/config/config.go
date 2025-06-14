@@ -24,10 +24,11 @@ type ServerConfig struct {
 
 // WebSocketConfig contains WebSocket server settings
 type WebSocketConfig struct {
-	Host         string `yaml:"host"`
-	Port         int    `yaml:"port"`
-	ReconnectMs  int    `yaml:"reconnect_ms"`
-	PingInterval int    `yaml:"ping_interval"`
+	Host           string   `yaml:"host"`
+	Port           int      `yaml:"port"`
+	ReconnectMs    int      `yaml:"reconnect_ms"`
+	PingInterval   int      `yaml:"ping_interval"`
+	AllowedOrigins []string `yaml:"allowed_origins"`
 }
 
 // BrowserConfig contains browser automation settings
@@ -54,6 +55,11 @@ func DefaultConfig() *Config {
 			Port:         8765,
 			ReconnectMs:  5000,
 			PingInterval: 30,
+			AllowedOrigins: []string{
+				"http://localhost",
+				"https://localhost",
+				"chrome-extension://*",
+			},
 		},
 		Browser: BrowserConfig{
 			DefaultTimeout: 30000,

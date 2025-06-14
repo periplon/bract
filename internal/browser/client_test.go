@@ -30,7 +30,7 @@ func TestNewClient(t *testing.T) {
 		ReconnectMs:  5000,
 		PingInterval: 30,
 	}
-	
+
 	client := NewClient(cfg)
 	assert.NotNil(t, client)
 	assert.Equal(t, cfg, client.config)
@@ -42,7 +42,7 @@ func TestClient_SetConnection(t *testing.T) {
 	mockConn := &MockConnection{}
 
 	client.SetConnection(mockConn)
-	
+
 	client.mu.RLock()
 	assert.Equal(t, mockConn, client.connection)
 	client.mu.RUnlock()
@@ -557,17 +557,17 @@ func TestClient_ExecuteScript(t *testing.T) {
 
 func TestClient_Screenshot(t *testing.T) {
 	tests := []struct {
-		name             string
-		tabID            int
-		fullPage         bool
-		selector         string
-		format           string
-		quality          int
-		setupMock        func(*MockConnection)
-		hasConn          bool
-		expectedDataURL  string
-		wantErr          bool
-		errMsg           string
+		name            string
+		tabID           int
+		fullPage        bool
+		selector        string
+		format          string
+		quality         int
+		setupMock       func(*MockConnection)
+		hasConn         bool
+		expectedDataURL string
+		wantErr         bool
+		errMsg          string
 	}{
 		{
 			name:     "take screenshot successfully",
@@ -667,10 +667,10 @@ func TestClient_Timeout(t *testing.T) {
 
 	// Try to list tabs (will timeout)
 	_, err := client.ListTabs(context.Background())
-	
+
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "timeout")
-	
+
 	mockConn.AssertExpectations(t)
 }
 
@@ -700,7 +700,7 @@ func TestClient_ContextCancellation(t *testing.T) {
 	err := <-errCh
 	require.Error(t, err)
 	assert.ErrorIs(t, err, context.Canceled)
-	
+
 	mockConn.AssertExpectations(t)
 }
 
@@ -720,10 +720,10 @@ func TestClient_ChromeExtensionError(t *testing.T) {
 
 	// Try to list tabs
 	_, err := client.ListTabs(context.Background())
-	
+
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "chrome extension error")
 	assert.Contains(t, err.Error(), "tabs permission denied")
-	
+
 	mockConn.AssertExpectations(t)
 }

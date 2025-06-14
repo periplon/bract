@@ -34,7 +34,7 @@ func (h *BrowserHandler) ListTabs(ctx context.Context, request mcp.CallToolReque
 	// Format tabs for display
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("Found %d open tabs:\n\n", len(tabs)))
-	
+
 	for _, tab := range tabs {
 		status := ""
 		if tab.Active {
@@ -58,7 +58,7 @@ func (h *BrowserHandler) CreateTab(ctx context.Context, request mcp.CallToolRequ
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create tab: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Created new tab with ID %d\nURL: %s\nTitle: %s", 
+	return mcp.NewToolResultText(fmt.Sprintf("Created new tab with ID %d\nURL: %s\nTitle: %s",
 		tab.ID, tab.URL, tab.Title)), nil
 }
 
@@ -274,7 +274,7 @@ func (h *BrowserHandler) ExtractContent(ctx context.Context, request mcp.CallToo
 
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("Found %d matching element(s):\n\n", len(results)))
-	
+
 	for i, content := range results {
 		if len(results) > 1 {
 			result.WriteString(fmt.Sprintf("[%d] ", i+1))
@@ -310,13 +310,13 @@ func (h *BrowserHandler) Screenshot(ctx context.Context, request mcp.CallToolReq
 			mimeType = dataURL[5:idx]
 		}
 	}
-	
+
 	// Extract base64 data from data URL
 	imageData := dataURL
 	if idx := strings.Index(dataURL, ","); idx > 0 {
 		imageData = dataURL[idx+1:]
 	}
-	
+
 	return mcp.NewToolResultImage("Screenshot captured", imageData, mimeType), nil
 }
 
@@ -338,7 +338,7 @@ func (h *BrowserHandler) GetCookies(ctx context.Context, request mcp.CallToolReq
 
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("Found %d cookie(s):\n\n", len(cookies)))
-	
+
 	for _, cookie := range cookies {
 		result.WriteString(fmt.Sprintf("Name: %s\n", cookie.Name))
 		result.WriteString(fmt.Sprintf("Value: %s\n", cookie.Value))

@@ -34,7 +34,7 @@ func main() {
 	browserClient := browser.NewClient(cfg.WebSocket)
 
 	// Start WebSocket server for Chrome extension
-	wsServer := websocket.NewServer(cfg.WebSocket.Port, browserClient)
+	wsServer := websocket.NewServer(cfg.WebSocket.Port, browserClient, cfg.WebSocket.AllowedOrigins)
 	go func() {
 		if err := wsServer.Start(ctx); err != nil {
 			log.Printf("WebSocket server error: %v", err)

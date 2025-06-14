@@ -37,8 +37,10 @@ func TestLoad_DefaultWhenNoConfigFile(t *testing.T) {
 	// Create a temp directory that doesn't contain config files
 	tmpDir := t.TempDir()
 	oldWd, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(oldWd)
+	require.NoError(t, os.Chdir(tmpDir))
+	defer func() {
+		_ = os.Chdir(oldWd)
+	}()
 
 	cfg, err := Load()
 
@@ -68,7 +70,7 @@ logging:
   format: "text"
 `
 
-	err := os.WriteFile(configPath, []byte(configContent), 0644)
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Set env var to point to test config
@@ -109,7 +111,7 @@ browser:
   max_tabs: 200
 `
 
-	err := os.WriteFile(configPath, []byte(configContent), 0644)
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Set env var to point to test config
@@ -153,7 +155,7 @@ server:
 invalid yaml here
 `
 
-	err := os.WriteFile(configPath, []byte(configContent), 0644)
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Set env var to point to test config
@@ -177,7 +179,7 @@ func TestLoad_EmptyYAMLFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.yaml")
 
-	err := os.WriteFile(configPath, []byte(""), 0644)
+	err := os.WriteFile(configPath, []byte(""), 0o644)
 	require.NoError(t, err)
 
 	// Set env var to point to test config
@@ -209,7 +211,7 @@ websocket:
   port: 8765
 `
 
-	err := os.WriteFile(configPath, []byte(configContent), 0644)
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Save old env vars
@@ -284,8 +286,10 @@ func TestLoad_DefaultLocations(t *testing.T) {
 	// Create config in current directory
 	tmpDir := t.TempDir()
 	oldWd, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(oldWd)
+	require.NoError(t, os.Chdir(tmpDir))
+	defer func() {
+		_ = os.Chdir(oldWd)
+	}()
 
 	configPath := filepath.Join(tmpDir, "config.yaml")
 	configContent := `
@@ -293,7 +297,7 @@ websocket:
   port: 7777
 `
 
-	err := os.WriteFile(configPath, []byte(configContent), 0644)
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	cfg, err := Load()
