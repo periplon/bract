@@ -27,11 +27,14 @@ print "✓ Successfully navigated to example.com"
 
 # Page is already loaded (navigate waits for load to complete)
 
-# Get page title
-call browser_execute_script {
-  tabId: tab.id,
-  script: "document.title"
-} -> title
+# Get page title using browser_list_tabs
+call browser_list_tabs -> tabs
+set title = ""
+loop t in tabs {
+  if t.id == tab.id {
+    set title = t.title
+  }
+}
 
 print "Page title: " + title
 
