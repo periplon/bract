@@ -44,6 +44,8 @@ type BrowserClient interface {
 	DeleteCookies(ctx context.Context, url, name string) error
 	GetLocalStorage(ctx context.Context, tabID int, key string) (string, error)
 	SetLocalStorage(ctx context.Context, tabID int, key, value string) error
+	ClearLocalStorage(ctx context.Context, tabID int) error
 	GetSessionStorage(ctx context.Context, tabID int, key string) (string, error)
 	SetSessionStorage(ctx context.Context, tabID int, key, value string) error
+	ClearSessionStorage(ctx context.Context, tabID int) error
 }

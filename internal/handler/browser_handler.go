@@ -458,6 +458,17 @@ func (h *BrowserHandler) SetLocalStorage(ctx context.Context, request mcp.CallTo
 	return mcp.NewToolResultText(fmt.Sprintf("Set localStorage['%s'] = %s", key, value)), nil
 }
 
+// ClearLocalStorage clears all localStorage
+func (h *BrowserHandler) ClearLocalStorage(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	tabID := request.GetInt("tabId", 0)
+
+	if err := h.client.ClearLocalStorage(ctx, tabID); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to clear localStorage: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText("Cleared all localStorage"), nil
+}
+
 // GetSessionStorage gets sessionStorage value
 func (h *BrowserHandler) GetSessionStorage(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	key, err := request.RequireString("key")
@@ -500,4 +511,15 @@ func (h *BrowserHandler) SetSessionStorage(ctx context.Context, request mcp.Call
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Set sessionStorage['%s'] = %s", key, value)), nil
+}
+
+// ClearSessionStorage clears all sessionStorage
+func (h *BrowserHandler) ClearSessionStorage(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	tabID := request.GetInt("tabId", 0)
+
+	if err := h.client.ClearSessionStorage(ctx, tabID); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to clear sessionStorage: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText("Cleared all sessionStorage"), nil
 }

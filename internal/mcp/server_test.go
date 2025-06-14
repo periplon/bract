@@ -72,6 +72,12 @@ func (m *MockBrowserClient) GetSessionStorage(ctx context.Context, tabID int, ke
 func (m *MockBrowserClient) SetSessionStorage(ctx context.Context, tabID int, key, value string) error {
 	return nil
 }
+func (m *MockBrowserClient) ClearLocalStorage(ctx context.Context, tabID int) error {
+	return nil
+}
+func (m *MockBrowserClient) ClearSessionStorage(ctx context.Context, tabID int) error {
+	return nil
+}
 
 func TestNewServer(t *testing.T) {
 	tests := []struct {

@@ -337,13 +337,15 @@ func mapActionToCommand(action string) string {
 		"getValue":          "tabs.getValue",
 		"waitForElement":    "tabs.waitForElement",
 		"scroll":            "tabs.scroll",
-		"getCookies":        "cookies.get",
-		"setCookie":         "cookies.set",
-		"removeCookies":     "cookies.remove",
-		"getLocalStorage":   "storage.local.get",
-		"setLocalStorage":   "storage.local.set",
-		"getSessionStorage": "storage.session.get",
-		"setSessionStorage": "storage.session.set",
+		"getCookies":        "tabs.getCookies",
+		"setCookie":         "tabs.setCookie",
+		"removeCookies":     "tabs.deleteCookie",
+		"getLocalStorage":    "tabs.getLocalStorage",
+		"setLocalStorage":    "tabs.setLocalStorage",
+		"clearLocalStorage":  "tabs.clearLocalStorage",
+		"getSessionStorage":  "tabs.getSessionStorage",
+		"setSessionStorage":  "tabs.setSessionStorage",
+		"clearSessionStorage": "tabs.clearSessionStorage",
 	}
 
 	if cmd, ok := commandMap[action]; ok {

@@ -503,6 +503,20 @@ func (c *Client) SetLocalStorage(ctx context.Context, tabID int, key, value stri
 	return err
 }
 
+// ClearLocalStorage clears all localStorage
+func (c *Client) ClearLocalStorage(ctx context.Context, tabID int) error {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	_, err := c.sendCommand(ctx, "clearLocalStorage", params)
+	return err
+}
+
 // GetSessionStorage gets sessionStorage value
 func (c *Client) GetSessionStorage(ctx context.Context, tabID int, key string) (string, error) {
 	if tabID == 0 {
@@ -540,5 +554,19 @@ func (c *Client) SetSessionStorage(ctx context.Context, tabID int, key, value st
 	}
 
 	_, err := c.sendCommand(ctx, "setSessionStorage", params)
+	return err
+}
+
+// ClearSessionStorage clears all sessionStorage
+func (c *Client) ClearSessionStorage(ctx context.Context, tabID int) error {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	_, err := c.sendCommand(ctx, "clearSessionStorage", params)
 	return err
 }
