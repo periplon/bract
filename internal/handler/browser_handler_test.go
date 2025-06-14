@@ -378,8 +378,13 @@ func TestBrowserHandler_CreateTab(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Created new tab")
-				assert.Contains(t, text, "Created new tab with ID 3")
+				// Check that the result is valid JSON
+				var tab browser.Tab
+				err := json.Unmarshal([]byte(text), &tab)
+				assert.NoError(t, err)
+				assert.Equal(t, 3, tab.ID)
+				assert.Equal(t, "https://example.com", tab.URL)
+				assert.Equal(t, "Example", tab.Title)
 			},
 		},
 		{
@@ -404,7 +409,13 @@ func TestBrowserHandler_CreateTab(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Created new tab")
+				// Check that the result is valid JSON
+				var tab browser.Tab
+				err := json.Unmarshal([]byte(text), &tab)
+				assert.NoError(t, err)
+				assert.Equal(t, 4, tab.ID)
+				assert.Equal(t, "about:blank", tab.URL)
+				assert.Equal(t, "New Tab", tab.Title)
 			},
 		},
 	}

@@ -73,8 +73,13 @@ func (h *BrowserHandler) CreateTab(ctx context.Context, request mcp.CallToolRequ
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create tab: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Created new tab with ID %d\nURL: %s\nTitle: %s",
-		tab.ID, tab.URL, tab.Title)), nil
+	// Return tab data as JSON for structured access
+	tabJSON, err := json.Marshal(tab)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize tab data: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(string(tabJSON)), nil
 }
 
 // CloseTab closes a browser tab
