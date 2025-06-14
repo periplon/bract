@@ -254,6 +254,19 @@ func TestServer_WebSocketIntegration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "test-connected", response.ID)
 	assert.Equal(t, "ack", response.Type)
+
+	// Test error message (no response expected for error messages)
+	errorMsg := Message{
+		ID:    "test-error",
+		Type:  "error",
+		Error: "Test error message",
+		Data:  json.RawMessage(`{"code": "TEST_ERROR"}`),
+	}
+	err = ws.WriteJSON(errorMsg)
+	require.NoError(t, err)
+
+	// Give some time for the message to be processed
+	time.Sleep(50 * time.Millisecond)
 }
 
 func TestServer_HandleMessage(t *testing.T) {

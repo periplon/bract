@@ -204,6 +204,16 @@ func (c *Connection) readPump() {
 			}); err != nil {
 				log.Printf("Failed to send acknowledgment: %v", err)
 			}
+		case "error":
+			// Handle error messages from Chrome extension
+			log.Printf("Chrome extension error (connection: %s): %s", c.ID, msg.Error)
+			if msg.Data != nil {
+				log.Printf("Error details: %s", string(msg.Data))
+			}
+			// If this is a response to a command, handle it appropriately
+			if msg.ID != "" {
+				c.server.browserClient.HandleResponse(msg.ID, nil, msg.Error)
+			}
 		default:
 			log.Printf("Unknown message type: %s", msg.Type)
 		}
