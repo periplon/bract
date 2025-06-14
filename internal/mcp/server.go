@@ -453,6 +453,18 @@ func (s *Server) registerStorageTools() {
 		return s.handler.SetLocalStorage(ctx, request)
 	})
 
+	// Local storage clear
+	clearLocalStorageTool := mcp.NewTool("browser_clear_local_storage",
+		mcp.WithDescription("Clear all localStorage items"),
+		mcp.WithNumber("tabId",
+			mcp.Description("Tab ID (defaults to active tab)"),
+		),
+	)
+
+	s.mcpServer.AddTool(clearLocalStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.ClearLocalStorage(ctx, request)
+	})
+
 	// Session storage get
 	getSessionStorageTool := mcp.NewTool("browser_get_session_storage",
 		mcp.WithDescription("Get sessionStorage item"),
@@ -487,5 +499,17 @@ func (s *Server) registerStorageTools() {
 
 	s.mcpServer.AddTool(setSessionStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.SetSessionStorage(ctx, request)
+	})
+
+	// Session storage clear
+	clearSessionStorageTool := mcp.NewTool("browser_clear_session_storage",
+		mcp.WithDescription("Clear all sessionStorage items"),
+		mcp.WithNumber("tabId",
+			mcp.Description("Tab ID (defaults to active tab)"),
+		),
+	)
+
+	s.mcpServer.AddTool(clearSessionStorageTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.ClearSessionStorage(ctx, request)
 	})
 }

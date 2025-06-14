@@ -35,27 +35,35 @@ func (m *MockBrowserClient) Reload(ctx context.Context, tabID int, hardReload bo
 func (m *MockBrowserClient) Click(ctx context.Context, tabID int, selector string, timeout int) error {
 	return nil
 }
+
 func (m *MockBrowserClient) Type(ctx context.Context, tabID int, selector, text string, clearFirst bool, delay int) error {
 	return nil
 }
+
 func (m *MockBrowserClient) Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error) {
 	return nil, nil
 }
+
 func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error) {
 	return nil, nil
 }
+
 func (m *MockBrowserClient) ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error) {
 	return nil, nil
 }
+
 func (m *MockBrowserClient) ExtractContent(ctx context.Context, tabID int, selector, contentType, attribute string) ([]string, error) {
 	return nil, nil
 }
+
 func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error) {
 	return "", nil
 }
+
 func (m *MockBrowserClient) GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error) {
 	return nil, nil
 }
+
 func (m *MockBrowserClient) SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error) {
 	return nil, nil
 }
@@ -63,13 +71,24 @@ func (m *MockBrowserClient) DeleteCookies(ctx context.Context, url, name string)
 func (m *MockBrowserClient) GetLocalStorage(ctx context.Context, tabID int, key string) (string, error) {
 	return "", nil
 }
+
 func (m *MockBrowserClient) SetLocalStorage(ctx context.Context, tabID int, key, value string) error {
 	return nil
 }
+
 func (m *MockBrowserClient) GetSessionStorage(ctx context.Context, tabID int, key string) (string, error) {
 	return "", nil
 }
+
 func (m *MockBrowserClient) SetSessionStorage(ctx context.Context, tabID int, key, value string) error {
+	return nil
+}
+
+func (m *MockBrowserClient) ClearLocalStorage(ctx context.Context, tabID int) error {
+	return nil
+}
+
+func (m *MockBrowserClient) ClearSessionStorage(ctx context.Context, tabID int) error {
 	return nil
 }
 

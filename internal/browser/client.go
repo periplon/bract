@@ -435,17 +435,49 @@ func (c *Client) GetCookies(ctx context.Context, url, name string) ([]Cookie, er
 		return nil, err
 	}
 
-	var cookies []Cookie
-	if err := json.Unmarshal(data, &cookies); err != nil {
+	// Browser extension returns {cookies: [...]}
+	var response struct {
+		Cookies []Cookie `json:"cookies"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, err
 	}
 
-	return cookies, nil
+	return response.Cookies, nil
 }
 
 // SetCookie sets a browser cookie
 func (c *Client) SetCookie(ctx context.Context, cookie Cookie) (json.RawMessage, error) {
-	response, err := c.sendCommand(ctx, "setCookie", cookie)
+	// Chrome extension requires a URL parameter
+	params := map[string]interface{}{
+		"name":     cookie.Name,
+		"value":    cookie.Value,
+		"domain":   cookie.Domain,
+		"path":     cookie.Path,
+		"secure":   cookie.Secure,
+		"httpOnly": cookie.HTTPOnly,
+	}
+
+	// Build URL from domain
+	protocol := "http"
+	if cookie.Secure {
+		protocol = "https"
+	}
+	domain := cookie.Domain
+	if domain == "" {
+		domain = "localhost"
+	}
+	// Remove leading dot from domain if present
+	if len(domain) > 0 && domain[0] == '.' {
+		domain = domain[1:]
+	}
+	params["url"] = fmt.Sprintf("%s://%s", protocol, domain)
+
+	if cookie.ExpirationDate > 0 {
+		params["expirationDate"] = cookie.ExpirationDate
+	}
+
+	response, err := c.sendCommand(ctx, "setCookie", params)
 	return response, err
 }
 
@@ -479,12 +511,28 @@ func (c *Client) GetLocalStorage(ctx context.Context, tabID int, key string) (st
 		return "", err
 	}
 
-	var value string
-	if err := json.Unmarshal(data, &value); err != nil {
+	// Browser extension returns {storage: {key: value}}
+	var response struct {
+		Storage map[string]interface{} `json:"storage"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
 		return "", err
 	}
 
-	return value, nil
+	// Get the specific key value
+	if response.Storage != nil {
+		if val, ok := response.Storage[key]; ok {
+			if strVal, ok := val.(string); ok {
+				return strVal, nil
+			}
+			// Handle null values
+			if val == nil {
+				return "", nil
+			}
+		}
+	}
+
+	return "", nil
 }
 
 // SetLocalStorage sets localStorage value
@@ -500,6 +548,20 @@ func (c *Client) SetLocalStorage(ctx context.Context, tabID int, key, value stri
 	}
 
 	_, err := c.sendCommand(ctx, "setLocalStorage", params)
+	return err
+}
+
+// ClearLocalStorage clears all localStorage
+func (c *Client) ClearLocalStorage(ctx context.Context, tabID int) error {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	_, err := c.sendCommand(ctx, "clearLocalStorage", params)
 	return err
 }
 
@@ -519,12 +581,28 @@ func (c *Client) GetSessionStorage(ctx context.Context, tabID int, key string) (
 		return "", err
 	}
 
-	var value string
-	if err := json.Unmarshal(data, &value); err != nil {
+	// Browser extension returns {storage: {key: value}}
+	var response struct {
+		Storage map[string]interface{} `json:"storage"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
 		return "", err
 	}
 
-	return value, nil
+	// Get the specific key value
+	if response.Storage != nil {
+		if val, ok := response.Storage[key]; ok {
+			if strVal, ok := val.(string); ok {
+				return strVal, nil
+			}
+			// Handle null values
+			if val == nil {
+				return "", nil
+			}
+		}
+	}
+
+	return "", nil
 }
 
 // SetSessionStorage sets sessionStorage value
@@ -540,5 +618,19 @@ func (c *Client) SetSessionStorage(ctx context.Context, tabID int, key, value st
 	}
 
 	_, err := c.sendCommand(ctx, "setSessionStorage", params)
+	return err
+}
+
+// ClearSessionStorage clears all sessionStorage
+func (c *Client) ClearSessionStorage(ctx context.Context, tabID int) error {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	_, err := c.sendCommand(ctx, "clearSessionStorage", params)
 	return err
 }

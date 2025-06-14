@@ -164,6 +164,16 @@ func (m *MockBrowserClient) SetSessionStorage(ctx context.Context, tabID int, ke
 	return args.Error(0)
 }
 
+func (m *MockBrowserClient) ClearLocalStorage(ctx context.Context, tabID int) error {
+	args := m.Called(ctx, tabID)
+	return args.Error(0)
+}
+
+func (m *MockBrowserClient) ClearSessionStorage(ctx context.Context, tabID int) error {
+	args := m.Called(ctx, tabID)
+	return args.Error(0)
+}
+
 // Helper function to extract text from mcp.Content
 func getTextFromContent(t *testing.T, content mcp.Content) string {
 	// Try both pointer and value types since the interface could contain either
