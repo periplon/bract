@@ -35,11 +35,13 @@ type Connection struct {
 
 // Message represents a WebSocket message
 type Message struct {
-	ID     string          `json:"id"`
-	Type   string          `json:"type"`
-	Action string          `json:"action,omitempty"`
-	Data   json.RawMessage `json:"data,omitempty"`
-	Error  string          `json:"error,omitempty"`
+	ID      string          `json:"id"`
+	Type    string          `json:"type"`
+	Command string          `json:"command,omitempty"` // Chrome extension expects 'command' field
+	Action  string          `json:"action,omitempty"`  // Keep for backward compatibility
+	Data    json.RawMessage `json:"data,omitempty"`
+	Params  json.RawMessage `json:"params,omitempty"` // Chrome extension uses 'params' for data
+	Error   string          `json:"error,omitempty"`
 }
 
 // NewServer creates a new WebSocket server
@@ -286,11 +288,16 @@ func (c *Connection) SendCommand(action string, data interface{}) (string, error
 		return "", err
 	}
 
+	// Map action names to Chrome extension command format
+	command := mapActionToCommand(action)
+
 	msg := &Message{
-		ID:     msgID,
-		Type:   "command",
-		Action: action,
-		Data:   dataBytes,
+		ID:      msgID,
+		Type:    "command",
+		Command: command,
+		Action:  action,    // Keep for backward compatibility
+		Data:    dataBytes, // Keep for backward compatibility
+		Params:  dataBytes, // Chrome extension expects params
 	}
 
 	if err := c.SendMessage(msg); err != nil {
@@ -298,6 +305,44 @@ func (c *Connection) SendCommand(action string, data interface{}) (string, error
 	}
 
 	return msgID, nil
+}
+
+// mapActionToCommand maps Go action names to Chrome extension command names
+func mapActionToCommand(action string) string {
+	// Map from Go-style names to Chrome extension command format
+	commandMap := map[string]string{
+		"listTabs":          "tabs.list",
+		"createTab":         "tabs.create",
+		"closeTab":          "tabs.close",
+		"activateTab":       "tabs.activate",
+		"reloadTab":         "tabs.reload",
+		"navigate":          "tabs.navigate",
+		"goBack":            "tabs.goBack",
+		"goForward":         "tabs.goForward",
+		"executeScript":     "tabs.executeScript",
+		"captureScreenshot": "tabs.captureScreenshot",
+		"captureVideo":      "tabs.captureVideo",
+		"extractText":       "tabs.extractText",
+		"findElements":      "tabs.findElements",
+		"click":             "tabs.click",
+		"type":              "tabs.type",
+		"getValue":          "tabs.getValue",
+		"waitForElement":    "tabs.waitForElement",
+		"scroll":            "tabs.scroll",
+		"getCookies":        "cookies.get",
+		"setCookie":         "cookies.set",
+		"removeCookies":     "cookies.remove",
+		"getLocalStorage":   "storage.local.get",
+		"setLocalStorage":   "storage.local.set",
+		"getSessionStorage": "storage.session.get",
+		"setSessionStorage": "storage.session.set",
+	}
+
+	if cmd, ok := commandMap[action]; ok {
+		return cmd
+	}
+	// Default: return the action as-is
+	return action
 }
 
 // GetConnections returns all active connections
