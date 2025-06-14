@@ -172,9 +172,14 @@ func (c *Client) CreateTab(ctx context.Context, url string, active bool) (*Tab, 
 		return nil, err
 	}
 
+	// Check for empty response
+	if len(data) == 0 {
+		return nil, fmt.Errorf("empty response from browser extension - ensure Chrome extension is properly installed and running")
+	}
+
 	var tab Tab
 	if err := json.Unmarshal(data, &tab); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse tab response: %w (response: %s)", err, string(data))
 	}
 
 	if active {
