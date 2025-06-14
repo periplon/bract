@@ -70,19 +70,24 @@ loop cookie in allCookies {
 }
 
 print "\n3. Testing specific cookie deletion:"
-# Delete a specific cookie by name
+# Delete a specific cookie by name (with proper path)
 call browser_delete_cookies {
-  url: "https://example.com",
+  url: "https://example.com/temp",
   name: "temp_data"
 } -> deleteResult1
 print "✓ Deleted 'temp_data' cookie"
 
-# Verify deletion
+# Verify deletion (check all cookies with the correct path)
 call browser_get_cookies {
-  url: "https://example.com",
-  name: "temp_data"
+  url: "https://example.com/temp"
 } -> checkDeleted
-assert len(checkDeleted) == 0, "Cookie should be deleted"
+set found = false
+loop c in checkDeleted {
+  if c.name == "temp_data" {
+    set found = true
+  }
+}
+assert found == false, "Cookie should be deleted"
 print "✓ Confirmed 'temp_data' cookie is deleted"
 
 print "\n4. Testing deletion of non-existent cookie:"
@@ -114,10 +119,15 @@ print "✓ Deleted httpOnly cookie"
 
 # Verify it's gone
 call browser_get_cookies {
-  url: "https://example.com",
-  name: "secure_token"
+  url: "https://example.com"
 } -> checkSecure
-assert len(checkSecure) == 0, "Secure cookie should be deleted"
+set secureFound = false
+loop c in checkSecure {
+  if c.name == "secure_token" {
+    set secureFound = true
+  }
+}
+assert secureFound == false, "Secure cookie should be deleted"
 print "✓ Confirmed httpOnly cookie is deleted"
 
 print "\n6. Testing URL-based cookie deletion:"
@@ -164,7 +174,12 @@ call browser_get_cookies {
   url: "https://example.com"
 } -> finalCheck
 print "\nFinal cookie count: " + str(len(finalCheck))
-assert len(finalCheck) == 0, "All cookies should be deleted"
+# Work around DSL type comparison issue - check if array is empty
+set allDeleted = true
+loop c in finalCheck {
+  set allDeleted = false
+}
+assert allDeleted == true, "All cookies should be deleted"
 print "✓ All cookies successfully deleted"
 
 print "\n8. Testing cookie deletion without URL:"

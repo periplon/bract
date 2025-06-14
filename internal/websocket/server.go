@@ -340,6 +340,7 @@ func mapActionToCommand(action string) string {
 		"getCookies":          "tabs.getCookies",
 		"setCookie":           "tabs.setCookie",
 		"removeCookies":       "tabs.deleteCookie",
+		"deleteCookies":       "tabs.deleteCookie",
 		"getLocalStorage":     "tabs.getLocalStorage",
 		"setLocalStorage":     "tabs.setLocalStorage",
 		"clearLocalStorage":   "tabs.clearLocalStorage",
