@@ -370,13 +370,27 @@ func (h *BrowserHandler) SetCookie(ctx context.Context, request mcp.CallToolRequ
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to set cookie: %v", err)), nil
 	}
 
-	// If response contains cookie data, return it
-	if len(response) > 0 {
-		return mcp.NewToolResultText(string(response)), nil
+	// Return success response as JSON
+	result := map[string]interface{}{
+		"success": true,
+		"name":    name,
+		"value":   value,
 	}
 
-	// Otherwise, return a descriptive message
-	return mcp.NewToolResultText(fmt.Sprintf("Set cookie '%s' = '%s'", name, value)), nil
+	// If response contains additional data, include it
+	if len(response) > 0 {
+		var responseData interface{}
+		if err := json.Unmarshal(response, &responseData); err == nil {
+			result["response"] = responseData
+		}
+	}
+
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize result: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // DeleteCookies deletes browser cookies

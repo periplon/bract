@@ -2,11 +2,18 @@
 # Tests browser storage capabilities (cookies, localStorage, sessionStorage)
 
 # Connect to the MCP browser server
-connect "./mcp-browser-server"
+connect "./bin/mcp-browser-server"
+
+# Wait for browser extension to connect
+call browser_wait_for_connection {
+  timeout: 5
+} -> connection_result
+print "Browser connection status:"
+print connection_result
 
 # Create a test tab
-call create_tab -> tab
-call navigate {
+call browser_create_tab -> tab
+call browser_navigate {
   tabId: tab.id,
   url: "https://example.com"
 }
@@ -15,7 +22,7 @@ call navigate {
 print "=== Testing Cookies ==="
 
 # Set a cookie
-call set_cookie {
+call browser_set_cookie {
   tabId: tab.id,
   name: "test_cookie",
   value: "test_value_123",
@@ -26,7 +33,7 @@ assert setCookieResult.success == true, "Failed to set cookie"
 print "✓ Cookie set successfully"
 
 # Get cookies
-call get_cookies {
+call browser_get_cookies {
   tabId: tab.id
 } -> cookies
 
@@ -42,8 +49,7 @@ assert found == true, "Test cookie not found"
 print "✓ Cookie retrieved successfully"
 
 # Delete the cookie
-call delete_cookie {
-  tabId: tab.id,
+call browser_delete_cookies {
   name: "test_cookie",
   domain: "example.com"
 }
@@ -52,14 +58,14 @@ print "✓ Cookie deleted"
 # Test localStorage
 print "\n=== Testing localStorage ==="
 
-call set_local_storage {
+call browser_set_local_storage {
   tabId: tab.id,
   key: "testKey",
   value: "testValue"
 }
 print "✓ localStorage item set"
 
-call get_local_storage {
+call browser_get_local_storage {
   tabId: tab.id,
   key: "testKey"
 } -> localValue
@@ -70,14 +76,14 @@ print "✓ localStorage item retrieved"
 # Test sessionStorage
 print "\n=== Testing sessionStorage ==="
 
-call set_session_storage {
+call browser_set_session_storage {
   tabId: tab.id,
   key: "sessionKey",
   value: "sessionValue"
 }
 print "✓ sessionStorage item set"
 
-call get_session_storage {
+call browser_get_session_storage {
   tabId: tab.id,
   key: "sessionKey"
 } -> sessionValue
@@ -86,6 +92,6 @@ assert sessionValue == "sessionValue", "sessionStorage value mismatch"
 print "✓ sessionStorage item retrieved"
 
 # Clean up
-call close_tab {tabId: tab.id}
+call browser_close_tab {tabId: tab.id}
 
 print "\n✓ All storage tests passed!"
