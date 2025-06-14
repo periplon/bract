@@ -102,17 +102,13 @@ call browser_clear_local_storage {
 } -> ls_clear_result
 print "Cleared all localStorage"
 
-# Try to get after clearing (should fail or return null)
-try {
-  call browser_get_local_storage {
-    tabId: tab.id,
-    key: "test_key"
-  } -> ls_cleared_check
-  print "localStorage['test_key'] after clear:"
-  print ls_cleared_check
-} catch error {
-  print "localStorage['test_key'] is empty after clear (expected)"
-}
+# Verify localStorage is cleared - getting a non-existent key may return empty string or error
+call browser_get_local_storage {
+  tabId: tab.id,
+  key: "test_key"
+} -> ls_cleared_check
+print "localStorage['test_key'] after clear (should be empty):"
+print ls_cleared_check
 
 # Test SessionStorage
 print "\n=== Testing SessionStorage ==="
@@ -153,17 +149,13 @@ call browser_clear_session_storage {
 } -> ss_clear_result
 print "Cleared all sessionStorage"
 
-# Try to get after clearing (should fail or return null)
-try {
-  call browser_get_session_storage {
-    tabId: tab.id,
-    key: "session_key"
-  } -> ss_cleared_check
-  print "sessionStorage['session_key'] after clear:"
-  print ss_cleared_check
-} catch error {
-  print "sessionStorage['session_key'] is empty after clear (expected)"
-}
+# Verify sessionStorage is cleared - getting a non-existent key may return empty string or error
+call browser_get_session_storage {
+  tabId: tab.id,
+  key: "session_key"
+} -> ss_cleared_check
+print "sessionStorage['session_key'] after clear (should be empty):"
+print ss_cleared_check
 
 # Test storage persistence across navigation
 print "\n=== Testing Storage Persistence ==="
