@@ -686,21 +686,23 @@ func (c *Client) ExtractText(ctx context.Context, tabID int, selector string) (s
 // stripHTMLTags removes HTML tags from a string and returns plain text
 func stripHTMLTags(html string) string {
 	// Remove script and style tags and their contents
-	scriptStyleRegex := regexp.MustCompile(`(?i)<(script|style)[^>]*>[\s\S]*?</\1>`)
-	html = scriptStyleRegex.ReplaceAllString(html, "")
-	
+	scriptRegex := regexp.MustCompile(`(?i)<script[^>]*>[\s\S]*?</script>`)
+	html = scriptRegex.ReplaceAllString(html, "")
+	styleRegex := regexp.MustCompile(`(?i)<style[^>]*>[\s\S]*?</style>`)
+	html = styleRegex.ReplaceAllString(html, "")
+
 	// Replace br tags with newlines
 	brRegex := regexp.MustCompile(`(?i)<br\s*/?>`)
 	html = brRegex.ReplaceAllString(html, "\n")
-	
+
 	// Replace p, div, and other block tags with newlines
 	blockRegex := regexp.MustCompile(`(?i)</?(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|tr|td|th)[^>]*>`)
 	html = blockRegex.ReplaceAllString(html, "\n")
-	
+
 	// Remove all remaining HTML tags
 	tagRegex := regexp.MustCompile(`<[^>]+>`)
 	text := tagRegex.ReplaceAllString(html, "")
-	
+
 	// Decode HTML entities
 	text = strings.ReplaceAll(text, "&amp;", "&")
 	text = strings.ReplaceAll(text, "&lt;", "<")
@@ -708,7 +710,7 @@ func stripHTMLTags(html string) string {
 	text = strings.ReplaceAll(text, "&quot;", "\"")
 	text = strings.ReplaceAll(text, "&#39;", "'")
 	text = strings.ReplaceAll(text, "&nbsp;", " ")
-	
+
 	// Clean up excessive whitespace
 	lines := strings.Split(text, "\n")
 	var cleanedLines []string
@@ -718,6 +720,6 @@ func stripHTMLTags(html string) string {
 			cleanedLines = append(cleanedLines, trimmed)
 		}
 	}
-	
+
 	return strings.Join(cleanedLines, "\n")
 }
