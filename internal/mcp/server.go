@@ -64,6 +64,7 @@ func (s *Server) registerTools() {
 	// Content Tools
 	s.registerExecuteScriptTool()
 	s.registerExtractContentTool()
+	s.registerExtractTextTool()
 	s.registerScreenshotTool()
 	s.registerGetActionablesTool()
 
@@ -322,6 +323,22 @@ func (s *Server) registerExtractContentTool() {
 
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.ExtractContent(ctx, request)
+	})
+}
+
+func (s *Server) registerExtractTextTool() {
+	tool := mcp.NewTool("browser_extract_text",
+		mcp.WithDescription("Extract content from the page and convert it to plain text"),
+		mcp.WithString("selector",
+			mcp.Description("CSS selector for element(s) to extract (defaults to 'body')"),
+		),
+		mcp.WithNumber("tabId",
+			mcp.Description("Tab ID to extract from (defaults to active tab)"),
+		),
+	)
+
+	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.ExtractText(ctx, request)
 	})
 }
 

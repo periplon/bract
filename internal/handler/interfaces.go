@@ -36,6 +36,7 @@ type BrowserClient interface {
 	// Content
 	ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error)
 	ExtractContent(ctx context.Context, tabID int, selector, contentType, attribute string) ([]string, error)
+	ExtractText(ctx context.Context, tabID int, selector string) (string, error)
 	Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error)
 
 	// Storage
