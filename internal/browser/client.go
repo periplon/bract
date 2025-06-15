@@ -634,3 +634,26 @@ func (c *Client) ClearSessionStorage(ctx context.Context, tabID int) error {
 	_, err := c.sendCommand(ctx, "clearSessionStorage", params)
 	return err
 }
+
+// GetActionables gets all actionable elements on the page
+func (c *Client) GetActionables(ctx context.Context, tabID int) ([]Actionable, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	data, err := c.sendCommand(ctx, "getActionables", params)
+	if err != nil {
+		return nil, err
+	}
+
+	var actionables []Actionable
+	if err := json.Unmarshal(data, &actionables); err != nil {
+		return nil, err
+	}
+
+	return actionables, nil
+}

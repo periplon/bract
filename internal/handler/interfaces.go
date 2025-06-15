@@ -48,4 +48,7 @@ type BrowserClient interface {
 	GetSessionStorage(ctx context.Context, tabID int, key string) (string, error)
 	SetSessionStorage(ctx context.Context, tabID int, key, value string) error
 	ClearSessionStorage(ctx context.Context, tabID int) error
+
+	// Actionables
+	GetActionables(ctx context.Context, tabID int) ([]browser.Actionable, error)
 }
