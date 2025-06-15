@@ -1057,7 +1057,7 @@ func TestBrowserHandler_GetAccessibilitySnapshot(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, "RootWebArea", snapshot["role"])
 				assert.Equal(t, "Test Page", snapshot["name"])
-				
+
 				children := snapshot["children"].([]interface{})
 				assert.Len(t, children, 2)
 			},

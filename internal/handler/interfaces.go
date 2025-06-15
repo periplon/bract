@@ -52,7 +52,7 @@ type BrowserClient interface {
 
 	// Actionables
 	GetActionables(ctx context.Context, tabID int) ([]browser.Actionable, error)
-	
+
 	// Accessibility
 	GetAccessibilitySnapshot(ctx context.Context, tabID int, interestingOnly bool, root string) (json.RawMessage, error)
 }

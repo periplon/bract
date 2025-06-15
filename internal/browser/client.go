@@ -735,7 +735,7 @@ func (c *Client) GetAccessibilitySnapshot(ctx context.Context, tabID int, intere
 		"tabId":           tabID,
 		"interestingOnly": interestingOnly,
 	}
-	
+
 	if root != "" {
 		params["root"] = root
 	}
