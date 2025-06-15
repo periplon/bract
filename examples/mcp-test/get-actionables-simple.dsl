@@ -1,40 +1,62 @@
 # Simple Get Actionables Example
 # Demonstrates the basic usage of browser_get_actionables tool
 
-# Connect to browser
-tool browser_wait_for_connection
+# Connect to the MCP browser server
+connect "./bin/mcp-browser-server"
+
+# Wait for browser extension to connect
+call browser_wait_for_connection {
+  timeout: 30
+} -> connection_result
+print "Browser connection established"
 
 # Navigate to Wikipedia
-tool browser_navigate {
-    "url": "https://en.wikipedia.org",
-    "waitUntilLoad": true
-}
+call browser_navigate {
+  url: "https://en.wikipedia.org",
+  waitUntilLoad: true
+} -> nav_result
+print "Navigation complete"
 
 # Get all actionable elements
-actionables = tool browser_get_actionables
+call browser_get_actionables -> actionables
 
 # Display summary
-print "Total actionable elements: " + len(actionables)
+print "\nTotal actionable elements: " + str(len(actionables))
 
 # Show first 10 elements
 print "\nFirst 10 actionable elements:"
-for i in range(0, min(10, len(actionables))) {
-    item = actionables[i]
-    print str(i+1) + ". [" + item.type + "] " + item.description
+set count = 0
+loop item in actionables {
+  if count < 10 {
+    print str(count + 1) + ". [" + item.type + "] " + item.description
     print "   Selector: " + item.selector
+    set count = count + 1
+  }
 }
 
 # Count by type
-types = {}
-for item in actionables {
-    if item.type in types {
-        types[item.type] = types[item.type] + 1
-    } else {
-        types[item.type] = 1
-    }
+set link_count = 0
+set button_count = 0
+set input_count = 0
+set other_count = 0
+
+loop item in actionables {
+  if item.type == "link" {
+    set link_count = link_count + 1
+  }
+  if item.type == "button" {
+    set button_count = button_count + 1
+  }
+  if item.type == "input" {
+    set input_count = input_count + 1
+  }
+  if item.type != "link" && item.type != "button" && item.type != "input" {
+    set other_count = other_count + 1
+  }
 }
 
 print "\nElements by type:"
-for type, count in types {
-    print "- " + type + ": " + str(count)
-}
+print "- link: " + str(link_count)
+print "- button: " + str(button_count)
+print "- input: " + str(input_count)
+print "- other: " + str(other_count)
