@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -659,4 +661,65 @@ func (c *Client) GetActionables(ctx context.Context, tabID int) ([]Actionable, e
 	}
 
 	return response.Actionables, nil
+}
+
+// ExtractText extracts content from the page as HTML and converts it to plain text
+func (c *Client) ExtractText(ctx context.Context, tabID int, selector string) (string, error) {
+	// Use the existing extractContent command with type "html"
+	results, err := c.ExtractContent(ctx, tabID, selector, "html", "")
+	if err != nil {
+		return "", err
+	}
+
+	// Join all results and strip HTML tags
+	var plainText strings.Builder
+	for i, html := range results {
+		if i > 0 {
+			plainText.WriteString("\n\n")
+		}
+		plainText.WriteString(stripHTMLTags(html))
+	}
+
+	return plainText.String(), nil
+}
+
+// stripHTMLTags removes HTML tags from a string and returns plain text
+func stripHTMLTags(html string) string {
+	// Remove script and style tags and their contents
+	scriptRegex := regexp.MustCompile(`(?i)<script[^>]*>[\s\S]*?</script>`)
+	html = scriptRegex.ReplaceAllString(html, "")
+	styleRegex := regexp.MustCompile(`(?i)<style[^>]*>[\s\S]*?</style>`)
+	html = styleRegex.ReplaceAllString(html, "")
+
+	// Replace br tags with newlines
+	brRegex := regexp.MustCompile(`(?i)<br\s*/?>`)
+	html = brRegex.ReplaceAllString(html, "\n")
+
+	// Replace p, div, and other block tags with newlines
+	blockRegex := regexp.MustCompile(`(?i)</?(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|tr|td|th)[^>]*>`)
+	html = blockRegex.ReplaceAllString(html, "\n")
+
+	// Remove all remaining HTML tags
+	tagRegex := regexp.MustCompile(`<[^>]+>`)
+	text := tagRegex.ReplaceAllString(html, "")
+
+	// Decode HTML entities
+	text = strings.ReplaceAll(text, "&amp;", "&")
+	text = strings.ReplaceAll(text, "&lt;", "<")
+	text = strings.ReplaceAll(text, "&gt;", ">")
+	text = strings.ReplaceAll(text, "&quot;", "\"")
+	text = strings.ReplaceAll(text, "&#39;", "'")
+	text = strings.ReplaceAll(text, "&nbsp;", " ")
+
+	// Clean up excessive whitespace
+	lines := strings.Split(text, "\n")
+	var cleanedLines []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			cleanedLines = append(cleanedLines, trimmed)
+		}
+	}
+
+	return strings.Join(cleanedLines, "\n")
 }

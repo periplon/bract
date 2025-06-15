@@ -56,6 +56,10 @@ func (m *MockBrowserClient) ExtractContent(ctx context.Context, tabID int, selec
 	return nil, nil
 }
 
+func (m *MockBrowserClient) ExtractText(ctx context.Context, tabID int, selector string) (string, error) {
+	return "", nil
+}
+
 func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error) {
 	return "", nil
 }

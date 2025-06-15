@@ -82,7 +82,30 @@ Comprehensive scrolling capabilities.
 - Scroll to elements
 - Horizontal scrolling
 
-### 5. Storage Management
+### 5. Content Extraction
+
+#### [extract-text.dsl](mcp-test/extract-text.dsl)
+Extract plain text from web pages.
+- Extract all text content from a page
+- Target specific elements with CSS selectors
+- Clean text output without HTML tags
+- Ideal for content analysis and reading
+
+#### [extract-article-text.dsl](mcp-test/extract-article-text.dsl)
+Advanced article extraction and analysis.
+- Extract article titles and body text
+- Estimate word count and reading time
+- Extract metadata (author, date, tags)
+- Fallback strategies for different site structures
+
+#### [compare-extract-tools.dsl](mcp-test/compare-extract-tools.dsl)
+Compare different content extraction methods.
+- browser_extract_content vs browser_extract_text
+- HTML extraction vs plain text extraction
+- Performance and output format comparison
+- Use case demonstrations
+
+### 6. Storage Management
 
 #### [storage-test.dsl](mcp-test/storage-test.dsl)
 Complete storage testing suite.
@@ -105,7 +128,7 @@ Advanced cookie operations.
 - Handle httpOnly cookies
 - Bulk cookie operations
 
-### 6. Advanced Automation
+### 7. Advanced Automation
 
 #### [advanced-automation.dsl](mcp-test/advanced-automation.dsl)
 Complex automation patterns.
@@ -205,7 +228,8 @@ run myFunction("arg1", "arg2")
 
 ### Content
 - `browser_execute_script` - Execute JavaScript
-- `browser_extract_content` - Extract page content
+- `browser_extract_content` - Extract page content as HTML or text array
+- `browser_extract_text` - Extract page content as plain text
 - `browser_screenshot` - Take a screenshot
 
 ### Storage

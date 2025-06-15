@@ -118,6 +118,11 @@ func (m *MockBrowserClient) ExtractContent(ctx context.Context, tabID int, selec
 	return args.Get(0).([]string), args.Error(1)
 }
 
+func (m *MockBrowserClient) ExtractText(ctx context.Context, tabID int, selector string) (string, error) {
+	args := m.Called(ctx, tabID, selector)
+	return args.String(0), args.Error(1)
+}
+
 func (m *MockBrowserClient) Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error) {
 	args := m.Called(ctx, tabID, fullPage, selector, format, quality)
 	return args.String(0), args.Error(1)

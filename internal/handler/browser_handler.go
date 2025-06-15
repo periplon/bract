@@ -541,3 +541,17 @@ func (h *BrowserHandler) GetActionables(ctx context.Context, request mcp.CallToo
 
 	return mcp.NewToolResultText(string(actionablesJSON)), nil
 }
+
+// ExtractText extracts content from the page and returns it as plain text
+func (h *BrowserHandler) ExtractText(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	selector := request.GetString("selector", "body")
+	tabID := request.GetInt("tabId", 0)
+
+	text, err := h.client.ExtractText(ctx, tabID, selector)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to extract text: %v", err)), nil
+	}
+
+	// Return as plain text
+	return mcp.NewToolResultText(text), nil
+}
