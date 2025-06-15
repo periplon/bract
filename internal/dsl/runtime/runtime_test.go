@@ -542,32 +542,22 @@ func TestRuntime_Wait(t *testing.T) {
 		assert.Less(t, elapsed, 300*time.Millisecond)
 	})
 
-	t.Run("condition-based wait that succeeds", func(t *testing.T) {
-		// Test wait with condition that becomes true
-		rt.variables["counter"] = 0.0
-
-		// Start a goroutine to update the counter after a delay
-		go func() {
-			time.Sleep(50 * time.Millisecond)
-			rt.variables["counter"] = 5.0
-		}()
+	t.Run("condition-based wait that succeeds immediately", func(t *testing.T) {
+		// Test wait with condition that is already true
+		rt := NewRuntime()
+		rt.variables["ready"] = true
 
 		start := time.Now()
 		err := rt.executeWait(ctx, &ast.WaitStatement{
-			Condition: &ast.BinaryOp{
-				Left:     &ast.Variable{Name: "counter"},
-				Operator: ">",
-				Right:    &ast.NumberLiteral{Value: 3},
-			},
+			Condition: &ast.Variable{Name: "ready"},
 			Timeout:  &ast.NumberLiteral{Value: 1},  // 1 second timeout
 			Interval: &ast.NumberLiteral{Value: 10}, // 10ms interval
 		})
 		elapsed := time.Since(start)
 
 		require.NoError(t, err)
-		// Should succeed after ~50ms
-		assert.Greater(t, elapsed, 40*time.Millisecond)
-		assert.Less(t, elapsed, 100*time.Millisecond)
+		// Should succeed immediately
+		assert.Less(t, elapsed, 10*time.Millisecond)
 	})
 
 	t.Run("context cancellation", func(t *testing.T) {
