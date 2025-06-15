@@ -645,15 +645,18 @@ func (c *Client) GetActionables(ctx context.Context, tabID int) ([]Actionable, e
 		"tabId": tabID,
 	}
 
-	data, err := c.sendCommand(ctx, "getActionables", params)
+	data, err := c.sendCommand(ctx, "tabs.getActionables", params)
 	if err != nil {
 		return nil, err
 	}
 
-	var actionables []Actionable
-	if err := json.Unmarshal(data, &actionables); err != nil {
+	// Chrome extension returns { actionables: [...] }
+	var response struct {
+		Actionables []Actionable `json:"actionables"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, err
 	}
 
-	return actionables, nil
+	return response.Actionables, nil
 }

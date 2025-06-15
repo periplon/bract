@@ -10,15 +10,20 @@ call browser_wait_for_connection {
 } -> connection_result
 print "Browser connection established"
 
-# Navigate to Wikipedia
-call browser_navigate {
+# Create a tab and navigate to Wikipedia
+call browser_create_tab {
   url: "https://en.wikipedia.org",
-  waitUntilLoad: true
-} -> nav_result
-print "Navigation complete"
+  active: true
+} -> tab
+print "Created tab with ID: " + str(tab.id)
+
+# Wait for page to load
+wait 2
 
 # Get all actionable elements
-call browser_get_actionables -> actionables
+call browser_get_actionables {
+  tabId: tab.id
+} -> actionables
 
 # Display summary
 print "\nTotal actionable elements: " + str(len(actionables))
@@ -41,16 +46,16 @@ set input_count = 0
 set other_count = 0
 
 loop item in actionables {
-  if item.type == "link" {
+  if item.type == "a" {
     set link_count = link_count + 1
   }
   if item.type == "button" {
     set button_count = button_count + 1
   }
-  if item.type == "input" {
+  if item.type == "input" || item.type == "textarea" || item.type == "select" || item.type == "input[type=\"checkbox\"]" || item.type == "input[type=\"radio\"]" {
     set input_count = input_count + 1
   }
-  if item.type != "link" && item.type != "button" && item.type != "input" {
+  if item.type != "a" && item.type != "button" && item.type != "input" && item.type != "textarea" && item.type != "select" && item.type != "input[type=\"checkbox\"]" && item.type != "input[type=\"radio\"]" {
     set other_count = other_count + 1
   }
 }

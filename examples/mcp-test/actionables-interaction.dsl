@@ -28,7 +28,7 @@ print "\n=== LINKS ==="
 set linkCount = 0
 set firstLink = null
 loop item in actionables {
-  if item.type == "link" {
+  if item.type == "a" {
     print "[" + str(item.labelNumber) + "] " + item.description
     if linkCount == 0 {
       set firstLink = item

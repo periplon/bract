@@ -3,7 +3,7 @@
 # to discover all interactive elements on a Wikipedia page
 
 # Connect to the MCP browser server
-connect "../../bin/mcp-browser-server"
+connect "./bin/mcp-browser-server"
 
 # Wait for browser extension to connect
 call browser_wait_for_connection {
@@ -51,7 +51,7 @@ loop item in actionables {
 print "\n=== Links ==="
 set linkCount = 0
 loop item in actionables {
-  if item.type == "link" && linkCount < 10 {
+  if item.type == "a" && linkCount < 10 {
     print "- " + item.description + " (" + item.selector + ")"
     set linkCount = linkCount + 1
   }
