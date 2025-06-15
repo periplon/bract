@@ -63,6 +63,11 @@ func (m *MockBrowserClient) ActivateTab(ctx context.Context, tabID int) error {
 	return args.Error(0)
 }
 
+func (m *MockBrowserClient) SendKey(ctx context.Context, key string, modifiers map[string]bool, tabID int) error {
+	args := m.Called(ctx, key, modifiers, tabID)
+	return args.Error(0)
+}
+
 func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error) {
 	args := m.Called(ctx, tabID, url, waitUntilLoad)
 	if args.Get(0) == nil {

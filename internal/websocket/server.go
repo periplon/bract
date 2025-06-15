@@ -321,6 +321,7 @@ func mapActionToCommand(action string) string {
 		"createTab":           "tabs.create",
 		"closeTab":            "tabs.close",
 		"activateTab":         "tabs.activate",
+		"sendKey":             "tabs.sendKey",
 		"reloadTab":           "tabs.reload",
 		"navigate":            "tabs.navigate",
 		"goBack":              "tabs.goBack",

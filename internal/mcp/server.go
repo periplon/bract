@@ -50,6 +50,7 @@ func (s *Server) registerTools() {
 	s.registerTabCreateTool()
 	s.registerTabCloseTool()
 	s.registerTabActivateTool()
+	s.registerSendKeyTool()
 
 	// Navigation Tools
 	s.registerNavigateTool()
@@ -142,6 +143,44 @@ func (s *Server) registerTabActivateTool() {
 
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.ActivateTab(ctx, request)
+	})
+}
+
+func (s *Server) registerSendKeyTool() {
+	tool := mcp.NewTool("browser_send_key",
+		mcp.WithDescription("Send keyboard key events to the browser"),
+		mcp.WithString("key",
+			mcp.Required(),
+			mcp.Description("Key to send (e.g., 'Tab', 'Enter', 'Escape', 'a', '1', etc.)"),
+		),
+		mcp.WithObject("modifiers",
+			mcp.Description("Modifier keys to hold while pressing the key"),
+			mcp.Properties(map[string]any{
+				"ctrl": map[string]any{
+					"type":        "boolean",
+					"description": "Hold Ctrl/Cmd key",
+				},
+				"shift": map[string]any{
+					"type":        "boolean",
+					"description": "Hold Shift key",
+				},
+				"alt": map[string]any{
+					"type":        "boolean",
+					"description": "Hold Alt/Option key",
+				},
+				"meta": map[string]any{
+					"type":        "boolean",
+					"description": "Hold Meta/Windows key",
+				},
+			}),
+		),
+		mcp.WithNumber("tabId",
+			mcp.Description("Tab ID to send key in (defaults to active tab)"),
+		),
+	)
+
+	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.SendKey(ctx, request)
 	})
 }
 

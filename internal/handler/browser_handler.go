@@ -101,6 +101,52 @@ func (h *BrowserHandler) ActivateTab(ctx context.Context, request mcp.CallToolRe
 	return mcp.NewToolResultText(fmt.Sprintf("Activated tab %d", tabID)), nil
 }
 
+// SendKey sends keyboard key events to the browser
+func (h *BrowserHandler) SendKey(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	key, err := request.RequireString("key")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// Parse modifiers
+	modifiers := make(map[string]bool)
+	if rawModifiers := request.GetArguments()["modifiers"]; rawModifiers != nil {
+		if modifiersMap, ok := rawModifiers.(map[string]interface{}); ok {
+			if val, ok := modifiersMap["ctrl"].(bool); ok {
+				modifiers["ctrl"] = val
+			}
+			if val, ok := modifiersMap["shift"].(bool); ok {
+				modifiers["shift"] = val
+			}
+			if val, ok := modifiersMap["alt"].(bool); ok {
+				modifiers["alt"] = val
+			}
+			if val, ok := modifiersMap["meta"].(bool); ok {
+				modifiers["meta"] = val
+			}
+		}
+	}
+
+	tabID := request.GetInt("tabId", 0)
+
+	if err := h.client.SendKey(ctx, key, modifiers, tabID); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to send key: %v", err)), nil
+	}
+
+	// Build response message
+	msg := fmt.Sprintf("Sent key '%s'", key)
+	if len(modifiers) > 0 {
+		msg += " with modifiers:"
+		for mod, enabled := range modifiers {
+			if enabled {
+				msg += fmt.Sprintf(" %s", mod)
+			}
+		}
+	}
+
+	return mcp.NewToolResultText(msg), nil
+}
+
 // Navigation Handlers
 
 // Navigate navigates to a URL
