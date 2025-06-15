@@ -792,6 +792,31 @@ func (rt *Runtime) toFloat(val interface{}) (float64, error) {
 }
 
 func (rt *Runtime) add(a, b interface{}) (interface{}, error) {
+	// Array concatenation
+	aArr, aIsArr := a.([]interface{})
+	bArr, bIsArr := b.([]interface{})
+	if aIsArr && bIsArr {
+		// Concatenate two arrays
+		result := make([]interface{}, 0, len(aArr)+len(bArr))
+		result = append(result, aArr...)
+		result = append(result, bArr...)
+		return result, nil
+	}
+	if aIsArr {
+		// Array + single element (wrap in array)
+		result := make([]interface{}, 0, len(aArr)+1)
+		result = append(result, aArr...)
+		result = append(result, b)
+		return result, nil
+	}
+	if bIsArr {
+		// Single element + array (wrap in array)
+		result := make([]interface{}, 0, 1+len(bArr))
+		result = append(result, a)
+		result = append(result, bArr...)
+		return result, nil
+	}
+
 	// String concatenation
 	if aStr, ok := a.(string); ok {
 		return aStr + rt.formatValue(b), nil
