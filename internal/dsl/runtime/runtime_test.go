@@ -550,8 +550,8 @@ func TestRuntime_Wait(t *testing.T) {
 		start := time.Now()
 		err := rt.executeWait(ctx, &ast.WaitStatement{
 			Condition: &ast.Variable{Name: "ready"},
-			Timeout:  &ast.NumberLiteral{Value: 1},  // 1 second timeout
-			Interval: &ast.NumberLiteral{Value: 10}, // 10ms interval
+			Timeout:   &ast.NumberLiteral{Value: 1},  // 1 second timeout
+			Interval:  &ast.NumberLiteral{Value: 10}, // 10ms interval
 		})
 		elapsed := time.Since(start)
 
