@@ -747,3 +747,166 @@ func (c *Client) GetAccessibilitySnapshot(ctx context.Context, tabID int, intere
 
 	return result, nil
 }
+
+// Surfingkeys MCP Integration Methods
+
+// ShowHints shows interactive element hints
+func (c *Client) ShowHints(ctx context.Context, tabID int, selector, action string) (json.RawMessage, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	if selector != "" {
+		params["selector"] = selector
+	}
+	if action != "" {
+		params["action"] = action
+	}
+
+	return c.sendCommand(ctx, "hints.show", params)
+}
+
+// ClickHint clicks on a hint element
+func (c *Client) ClickHint(ctx context.Context, tabID int, selector string, index int, text string) (json.RawMessage, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	if selector != "" {
+		params["selector"] = selector
+	}
+	if index >= 0 {
+		params["index"] = index
+	}
+	if text != "" {
+		params["text"] = text
+	}
+
+	return c.sendCommand(ctx, "hints.click", params)
+}
+
+// Search performs a web search
+func (c *Client) Search(ctx context.Context, query, engine string, newTab bool) (json.RawMessage, error) {
+	params := map[string]interface{}{
+		"query":  query,
+		"newTab": newTab,
+	}
+
+	if engine != "" {
+		params["engine"] = engine
+	}
+
+	return c.sendCommand(ctx, "search", params)
+}
+
+// Find searches for text on the current page
+func (c *Client) Find(ctx context.Context, tabID int, text string, caseSensitive, wholeWord bool) (json.RawMessage, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId":         tabID,
+		"text":          text,
+		"caseSensitive": caseSensitive,
+		"wholeWord":     wholeWord,
+	}
+
+	return c.sendCommand(ctx, "find", params)
+}
+
+// ReadClipboard reads the system clipboard
+func (c *Client) ReadClipboard(ctx context.Context) (string, error) {
+	data, err := c.sendCommand(ctx, "clipboard.read", nil)
+	if err != nil {
+		return "", err
+	}
+
+	var result struct {
+		Text string `json:"text"`
+	}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return "", err
+	}
+
+	return result.Text, nil
+}
+
+// WriteClipboard writes to the system clipboard
+func (c *Client) WriteClipboard(ctx context.Context, text, format string) error {
+	params := map[string]interface{}{
+		"text": text,
+	}
+
+	if format != "" {
+		params["format"] = format
+	}
+
+	_, err := c.sendCommand(ctx, "clipboard.write", params)
+	return err
+}
+
+// ShowOmnibar shows the omnibar
+func (c *Client) ShowOmnibar(ctx context.Context, tabID int, barType, query string) (json.RawMessage, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+		"type":  barType,
+	}
+
+	if query != "" {
+		params["query"] = query
+	}
+
+	return c.sendCommand(ctx, "omnibar.show", params)
+}
+
+// StartVisualMode starts visual selection mode
+func (c *Client) StartVisualMode(ctx context.Context, tabID int, selectElement bool) (json.RawMessage, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId":         tabID,
+		"selectElement": selectElement,
+	}
+
+	return c.sendCommand(ctx, "visual.start", params)
+}
+
+// GetPageTitle gets the title of the current page
+func (c *Client) GetPageTitle(ctx context.Context, tabID int) (string, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	data, err := c.sendCommand(ctx, "getPageTitle", params)
+	if err != nil {
+		return "", err
+	}
+
+	var result struct {
+		Title string `json:"title"`
+	}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return "", err
+	}
+
+	return result.Title, nil
+}
