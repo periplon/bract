@@ -174,6 +174,14 @@ func (m *MockBrowserClient) ClearSessionStorage(ctx context.Context, tabID int) 
 	return args.Error(0)
 }
 
+func (m *MockBrowserClient) GetActionables(ctx context.Context, tabID int) ([]browser.Actionable, error) {
+	args := m.Called(ctx, tabID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]browser.Actionable), args.Error(1)
+}
+
 // Helper function to extract text from mcp.Content
 func getTextFromContent(t *testing.T, content mcp.Content) string {
 	// Try both pointer and value types since the interface could contain either
@@ -644,6 +652,171 @@ func TestBrowserHandler_ExecuteScript(t *testing.T) {
 			}
 
 			result, err := handler.ExecuteScript(context.Background(), tt.request)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
+			}
+
+			mockClient.AssertExpectations(t)
+		})
+	}
+}
+
+func TestBrowserHandler_GetActionables(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupMock   func(*MockBrowserClient)
+		request     mcp.CallToolRequest
+		wantErr     bool
+		checkResult func(*testing.T, *mcp.CallToolResult)
+	}{
+		{
+			name: "get actionables successfully",
+			setupMock: func(m *MockBrowserClient) {
+				actionables := []browser.Actionable{
+					{
+						LabelNumber: 0,
+						Description: "Submit",
+						Type:        "button",
+						Selector:    "#submit-btn",
+					},
+					{
+						LabelNumber: 1,
+						Description: "Email input",
+						Type:        "input",
+						Selector:    "input[type=\"email\"]",
+					},
+					{
+						LabelNumber: 2,
+						Description: "Home",
+						Type:        "link",
+						Selector:    "a[href=\"/\"]",
+					},
+				}
+				m.On("GetActionables", mock.Anything, 0).Return(actionables, nil)
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_get_actionables",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+
+				// Should return JSON array
+				var actionablesResult []browser.Actionable
+				err := json.Unmarshal([]byte(text), &actionablesResult)
+				require.NoError(t, err)
+				assert.Len(t, actionablesResult, 3)
+
+				assert.Equal(t, 0, actionablesResult[0].LabelNumber)
+				assert.Equal(t, "Submit", actionablesResult[0].Description)
+				assert.Equal(t, "button", actionablesResult[0].Type)
+				assert.Equal(t, "#submit-btn", actionablesResult[0].Selector)
+
+				assert.Equal(t, 1, actionablesResult[1].LabelNumber)
+				assert.Equal(t, "Email input", actionablesResult[1].Description)
+				assert.Equal(t, "input", actionablesResult[1].Type)
+			},
+		},
+		{
+			name: "get actionables with specific tab ID",
+			setupMock: func(m *MockBrowserClient) {
+				actionables := []browser.Actionable{
+					{
+						LabelNumber: 0,
+						Description: "Click me",
+						Type:        "button",
+						Selector:    "button.action",
+					},
+				}
+				m.On("GetActionables", mock.Anything, 123).Return(actionables, nil)
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_get_actionables",
+					Arguments: map[string]interface{}{
+						"tabId": 123,
+					},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+
+				var actionablesResult []browser.Actionable
+				err := json.Unmarshal([]byte(text), &actionablesResult)
+				require.NoError(t, err)
+				assert.Len(t, actionablesResult, 1)
+				assert.Equal(t, "Click me", actionablesResult[0].Description)
+			},
+		},
+		{
+			name: "get actionables empty result",
+			setupMock: func(m *MockBrowserClient) {
+				m.On("GetActionables", mock.Anything, 0).Return([]browser.Actionable{}, nil)
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_get_actionables",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+
+				var actionablesResult []browser.Actionable
+				err := json.Unmarshal([]byte(text), &actionablesResult)
+				require.NoError(t, err)
+				assert.Len(t, actionablesResult, 0)
+			},
+		},
+		{
+			name: "get actionables with error",
+			setupMock: func(m *MockBrowserClient) {
+				m.On("GetActionables", mock.Anything, 0).Return([]browser.Actionable(nil), errors.New("page not loaded"))
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_get_actionables",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Failed to get actionables")
+				assert.Contains(t, text, "page not loaded")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := &MockBrowserClient{}
+			handler := NewBrowserHandler(mockClient)
+
+			if tt.setupMock != nil {
+				tt.setupMock(mockClient)
+			}
+
+			result, err := handler.GetActionables(context.Background(), tt.request)
 
 			if tt.wantErr {
 				require.Error(t, err)

@@ -65,6 +65,7 @@ func (s *Server) registerTools() {
 	s.registerExecuteScriptTool()
 	s.registerExtractContentTool()
 	s.registerScreenshotTool()
+	s.registerGetActionablesTool()
 
 	// Storage Tools
 	s.registerCookieTools()
@@ -347,6 +348,19 @@ func (s *Server) registerScreenshotTool() {
 
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.Screenshot(ctx, request)
+	})
+}
+
+func (s *Server) registerGetActionablesTool() {
+	tool := mcp.NewTool("browser_get_actionables",
+		mcp.WithDescription("Get all actionable elements on the page (buttons, links, inputs, etc.)"),
+		mcp.WithNumber("tabId",
+			mcp.Description("Tab ID to get actionables from (defaults to active tab)"),
+		),
+	)
+
+	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.GetActionables(ctx, request)
 	})
 }
 

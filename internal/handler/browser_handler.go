@@ -523,3 +523,21 @@ func (h *BrowserHandler) ClearSessionStorage(ctx context.Context, request mcp.Ca
 
 	return mcp.NewToolResultText("Cleared all sessionStorage"), nil
 }
+
+// GetActionables gets all actionable elements on the page
+func (h *BrowserHandler) GetActionables(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	tabID := request.GetInt("tabId", 0)
+
+	actionables, err := h.client.GetActionables(ctx, tabID)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get actionables: %v", err)), nil
+	}
+
+	// Return actionables as JSON array
+	actionablesJSON, err := json.Marshal(actionables)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to serialize actionables: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(string(actionablesJSON)), nil
+}

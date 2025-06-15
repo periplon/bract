@@ -634,3 +634,29 @@ func (c *Client) ClearSessionStorage(ctx context.Context, tabID int) error {
 	_, err := c.sendCommand(ctx, "clearSessionStorage", params)
 	return err
 }
+
+// GetActionables gets all actionable elements on the page
+func (c *Client) GetActionables(ctx context.Context, tabID int) ([]Actionable, error) {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId": tabID,
+	}
+
+	data, err := c.sendCommand(ctx, "tabs.getActionables", params)
+	if err != nil {
+		return nil, err
+	}
+
+	// Chrome extension returns { actionables: [...] }
+	var response struct {
+		Actionables []Actionable `json:"actionables"`
+	}
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, err
+	}
+
+	return response.Actionables, nil
+}

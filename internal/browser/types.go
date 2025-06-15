@@ -21,3 +21,11 @@ type Cookie struct {
 	SameSite       string  `json:"sameSite,omitempty"`
 	ExpirationDate float64 `json:"expirationDate,omitempty"`
 }
+
+// Actionable represents an interactive element on a webpage
+type Actionable struct {
+	LabelNumber int    `json:"labelNumber"`
+	Description string `json:"description"`
+	Type        string `json:"type"`
+	Selector    string `json:"selector"`
+}
