@@ -2,7 +2,7 @@
 # Shows how to discover and interact with page elements using browser_get_actionables
 
 # Connect to the MCP browser server
-connect "./bin/mcp-browser-server"
+connect "../../bin/mcp-browser-server"
 
 # Wait for browser extension
 call browser_wait_for_connection {

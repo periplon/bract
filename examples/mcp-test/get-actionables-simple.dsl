@@ -2,7 +2,7 @@
 # Demonstrates the basic usage of browser_get_actionables tool
 
 # Connect to the MCP browser server
-connect "./bin/mcp-browser-server"
+connect "../../bin/mcp-browser-server"
 
 # Wait for browser extension to connect
 call browser_wait_for_connection {
