@@ -513,7 +513,7 @@ func TestRuntime_Wait(t *testing.T) {
 			Condition: &ast.NumberLiteral{Value: 0.1},
 		})
 		elapsed := time.Since(start)
-		
+
 		require.NoError(t, err)
 		// Allow some tolerance for timing
 		assert.Greater(t, elapsed, 90*time.Millisecond)
@@ -528,13 +528,13 @@ func TestRuntime_Wait(t *testing.T) {
 		err := rt.executeWait(ctx, &ast.WaitStatement{
 			Condition: &ast.Variable{Name: "ready"},
 			Timeout:   &ast.NumberLiteral{Value: 0.2}, // 0.2 second timeout
-			Interval:  &ast.NumberLiteral{Value: 50}, // 50ms interval
+			Interval:  &ast.NumberLiteral{Value: 50},  // 50ms interval
 		})
 		elapsed := time.Since(start)
-		
+
 		t.Logf("Elapsed time: %v", elapsed)
 		t.Logf("Error: %v", err)
-		
+
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "wait timeout")
 		// Should timeout after ~0.2 seconds, but allow for some timing variance
@@ -545,13 +545,13 @@ func TestRuntime_Wait(t *testing.T) {
 	t.Run("condition-based wait that succeeds", func(t *testing.T) {
 		// Test wait with condition that becomes true
 		rt.variables["counter"] = 0.0
-		
+
 		// Start a goroutine to update the counter after a delay
 		go func() {
 			time.Sleep(50 * time.Millisecond)
 			rt.variables["counter"] = 5.0
 		}()
-		
+
 		start := time.Now()
 		err := rt.executeWait(ctx, &ast.WaitStatement{
 			Condition: &ast.BinaryOp{
@@ -559,11 +559,11 @@ func TestRuntime_Wait(t *testing.T) {
 				Operator: ">",
 				Right:    &ast.NumberLiteral{Value: 3},
 			},
-			Timeout:  &ast.NumberLiteral{Value: 1}, // 1 second timeout
+			Timeout:  &ast.NumberLiteral{Value: 1},  // 1 second timeout
 			Interval: &ast.NumberLiteral{Value: 10}, // 10ms interval
 		})
 		elapsed := time.Since(start)
-		
+
 		require.NoError(t, err)
 		// Should succeed after ~50ms
 		assert.Greater(t, elapsed, 40*time.Millisecond)
@@ -573,18 +573,18 @@ func TestRuntime_Wait(t *testing.T) {
 	t.Run("context cancellation", func(t *testing.T) {
 		// Test that wait respects context cancellation
 		ctx, cancel := context.WithCancel(context.Background())
-		
+
 		go func() {
 			time.Sleep(50 * time.Millisecond)
 			cancel()
 		}()
-		
+
 		start := time.Now()
 		err := rt.executeWait(ctx, &ast.WaitStatement{
 			Condition: &ast.NumberLiteral{Value: 1}, // 1 second sleep
 		})
 		elapsed := time.Since(start)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, context.Canceled, err)
 		// Should be cancelled after ~50ms
