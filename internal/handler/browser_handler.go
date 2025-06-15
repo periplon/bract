@@ -567,6 +567,20 @@ func (h *BrowserHandler) GetAccessibilitySnapshot(ctx context.Context, request m
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get accessibility snapshot: %v", err)), nil
 	}
 
-	// Return snapshot as JSON string
-	return mcp.NewToolResultText(string(snapshot)), nil
+	// Parse the response to extract the snapshot
+	var response struct {
+		Snapshot json.RawMessage `json:"snapshot"`
+	}
+	if err := json.Unmarshal(snapshot, &response); err != nil {
+		// If unmarshal fails, return the raw response
+		return mcp.NewToolResultText(string(snapshot)), nil
+	}
+
+	// If snapshot is null, return an empty object
+	if response.Snapshot == nil || string(response.Snapshot) == "null" {
+		return mcp.NewToolResultText("{}"), nil
+	}
+
+	// Return the snapshot directly
+	return mcp.NewToolResultText(string(response.Snapshot)), nil
 }

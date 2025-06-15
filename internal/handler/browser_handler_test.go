@@ -1022,20 +1022,22 @@ func TestBrowserHandler_GetAccessibilitySnapshot(t *testing.T) {
 			name: "get accessibility snapshot successfully",
 			setupMock: func(m *MockBrowserClient) {
 				snapshot := json.RawMessage(`{
-					"role": "RootWebArea",
-					"name": "Test Page",
-					"children": [
-						{
-							"role": "heading",
-							"name": "Welcome",
-							"level": 1
-						},
-						{
-							"role": "button",
-							"name": "Submit",
-							"disabled": false
-						}
-					]
+					"snapshot": {
+						"role": "RootWebArea",
+						"name": "Test Page",
+						"children": [
+							{
+								"role": "heading",
+								"name": "Welcome",
+								"level": 1
+							},
+							{
+								"role": "button",
+								"name": "Submit",
+								"disabled": false
+							}
+						]
+					}
 				}`)
 				m.On("GetAccessibilitySnapshot", mock.Anything, 0, true, "").Return(snapshot, nil)
 			},
@@ -1066,8 +1068,10 @@ func TestBrowserHandler_GetAccessibilitySnapshot(t *testing.T) {
 			name: "get accessibility snapshot with specific parameters",
 			setupMock: func(m *MockBrowserClient) {
 				snapshot := json.RawMessage(`{
-					"role": "region",
-					"name": "Main Content"
+					"snapshot": {
+						"role": "region",
+						"name": "Main Content"
+					}
 				}`)
 				m.On("GetAccessibilitySnapshot", mock.Anything, 123, false, "#main").Return(snapshot, nil)
 			},
@@ -1112,6 +1116,27 @@ func TestBrowserHandler_GetAccessibilitySnapshot(t *testing.T) {
 				text := getTextFromContent(t, result.Content[0])
 				assert.Contains(t, text, "Failed to get accessibility snapshot")
 				assert.Contains(t, text, "page not accessible")
+			},
+		},
+		{
+			name: "get accessibility snapshot with null result",
+			setupMock: func(m *MockBrowserClient) {
+				snapshot := json.RawMessage(`{"snapshot": null}`)
+				m.On("GetAccessibilitySnapshot", mock.Anything, 0, true, "").Return(snapshot, nil)
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_get_accessibility_snapshot",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				// Should return empty object when snapshot is null
+				assert.Equal(t, "{}", text)
 			},
 		},
 	}

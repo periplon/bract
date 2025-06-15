@@ -70,8 +70,8 @@ set result_str = str(snapshot_result)
 print "Length: " + str(len(result_str)) + " characters"
 
 # Check if we got a valid snapshot
-if result_str == "{\"snapshot\":null}" || result_str == "null" {
-  print "\nWarning: Received null snapshot. This can happen when:"
+if result_str == "{}" || result_str == "null" {
+  print "\nWarning: Received empty snapshot. This can happen when:"
   print "- The page is still loading"
   print "- The page has no accessible content"
   print "- The browser extension needs to be refreshed"

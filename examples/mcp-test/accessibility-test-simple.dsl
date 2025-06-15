@@ -36,8 +36,8 @@ call browser_get_accessibility_snapshot {
 
 set result1 = str(snapshot1)
 print "Result length: " + str(len(result1)) + " characters"
-if result1 == "{\"snapshot\":null}" || result1 == "null" {
-  print "⚠️  Received null snapshot"
+if result1 == "{}" || result1 == "null" {
+  print "⚠️  Received empty snapshot"
 } else {
   print "✅ Received accessibility snapshot"
 }
@@ -51,8 +51,8 @@ call browser_get_accessibility_snapshot {
 
 set result2 = str(snapshot2)
 print "Result length: " + str(len(result2)) + " characters"
-if result2 == "{\"snapshot\":null}" || result2 == "null" {
-  print "⚠️  Received null snapshot"
+if result2 == "{}" || result2 == "null" {
+  print "⚠️  Received empty snapshot"
 } else {
   print "✅ Received accessibility snapshot"
 }
@@ -66,8 +66,8 @@ call browser_get_accessibility_snapshot {
 
 set result3 = str(snapshot3)
 print "Result length: " + str(len(result3)) + " characters"
-if result3 == "{\"snapshot\":null}" || result3 == "null" {
-  print "⚠️  Received null snapshot"
+if result3 == "{}" || result3 == "null" {
+  print "⚠️  Received empty snapshot"
 } else {
   print "✅ Received accessibility snapshot"
 }
