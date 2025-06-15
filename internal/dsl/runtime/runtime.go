@@ -223,7 +223,19 @@ func (rt *Runtime) executeAssert(ctx context.Context, stmt *ast.AssertStatement)
 }
 
 func (rt *Runtime) executeWait(ctx context.Context, stmt *ast.WaitStatement) error {
-	// Default timeout and interval
+	// Check if the condition is a simple numeric literal (sleep case)
+	if numLit, ok := stmt.Condition.(*ast.NumberLiteral); ok && stmt.Timeout == nil && stmt.Interval == nil {
+		// Simple sleep for N seconds
+		duration := time.Duration(numLit.Value * float64(time.Second))
+		select {
+		case <-time.After(duration):
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+
+	// Default timeout and interval for condition-based wait
 	timeout := 30 * time.Second
 	interval := 100 * time.Millisecond
 
@@ -235,7 +247,7 @@ func (rt *Runtime) executeWait(ctx context.Context, stmt *ast.WaitStatement) err
 		}
 		switch v := timeoutVal.(type) {
 		case float64:
-			timeout = time.Duration(v) * time.Second
+			timeout = time.Duration(v * float64(time.Second))
 		case int:
 			timeout = time.Duration(v) * time.Second
 		default:
@@ -251,7 +263,7 @@ func (rt *Runtime) executeWait(ctx context.Context, stmt *ast.WaitStatement) err
 		}
 		switch v := intervalVal.(type) {
 		case float64:
-			interval = time.Duration(v) * time.Millisecond
+			interval = time.Duration(v * float64(time.Millisecond))
 		case int:
 			interval = time.Duration(v) * time.Millisecond
 		default:
@@ -261,6 +273,10 @@ func (rt *Runtime) executeWait(ctx context.Context, stmt *ast.WaitStatement) err
 
 	// Wait for condition
 	deadline := time.Now().Add(timeout)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	// Check condition immediately
 	for {
 		result, err := rt.evaluateExpression(ctx, stmt.Condition)
 		if err != nil {
@@ -271,11 +287,18 @@ func (rt *Runtime) executeWait(ctx context.Context, stmt *ast.WaitStatement) err
 			return nil
 		}
 
+		// Check if we've exceeded the timeout
 		if time.Now().After(deadline) {
 			return fmt.Errorf("wait timeout: condition did not become true within %v", timeout)
 		}
 
-		time.Sleep(interval)
+		// Wait for next interval or context cancellation
+		select {
+		case <-ticker.C:
+			// Continue to next iteration
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
 }
 
