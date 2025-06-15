@@ -92,6 +92,10 @@ func (m *MockBrowserClient) ClearSessionStorage(ctx context.Context, tabID int) 
 	return nil
 }
 
+func (m *MockBrowserClient) GetActionables(ctx context.Context, tabID int) ([]browser.Actionable, error) {
+	return nil, nil
+}
+
 func TestNewServer(t *testing.T) {
 	tests := []struct {
 		name    string
