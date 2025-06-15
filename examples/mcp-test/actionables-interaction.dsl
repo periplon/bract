@@ -10,16 +10,21 @@ call browser_wait_for_connection {
 }
 print "Browser connected"
 
-# Navigate to example.com
-call browser_navigate {
+# Create a tab and navigate to example.com
+call browser_create_tab {
   url: "https://example.com",
-  waitUntilLoad: true
-}
-print "Navigated to example.com"
+  active: true
+} -> tab
+print "Created tab with ID: " + str(tab.id)
+
+# Wait for page to load
+wait 2
 
 # Get all actionable elements
 print "\nAnalyzing page for actionable elements..."
-call browser_get_actionables -> actionables
+call browser_get_actionables {
+  tabId: tab.id
+} -> actionables
 
 print "Found " + str(len(actionables)) + " actionable elements"
 
@@ -64,6 +69,7 @@ print "Total inputs: " + str(inputCount)
 if firstLink != null {
   print "\n=> Clicking on first link: " + firstLink.description
   call browser_click {
+    tabId: tab.id,
     selector: firstLink.selector
   }
   
@@ -71,11 +77,14 @@ if firstLink != null {
   wait 2
   
   # Get actionables on the new page
-  call browser_get_actionables -> newActionables
+  call browser_get_actionables {
+    tabId: tab.id
+  } -> newActionables
   print "New page has " + str(len(newActionables)) + " actionable elements"
   
   # Navigate back
   call browser_navigate {
+    tabId: tab.id,
     url: "https://example.com"
   }
   wait 1
@@ -105,10 +114,12 @@ if formInput != null {
   
   # Click and type in the input
   call browser_click {
+    tabId: tab.id,
     selector: formInput.selector
   }
   
   call browser_type {
+    tabId: tab.id,
     selector: formInput.selector,
     text: "test input value",
     clearFirst: true
