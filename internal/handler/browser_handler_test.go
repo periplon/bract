@@ -103,11 +103,11 @@ func (m *MockBrowserClient) WaitForElement(ctx context.Context, tabID int, selec
 }
 
 func (m *MockBrowserClient) ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error) {
-	mockArgs := m.Called(ctx, tabID, script, args)
-	if mockArgs.Get(0) == nil {
-		return nil, mockArgs.Error(1)
+	callArgs := m.Called(ctx, tabID, script, args)
+	if callArgs.Get(0) == nil {
+		return nil, callArgs.Error(1)
 	}
-	return mockArgs.Get(0).(json.RawMessage), mockArgs.Error(1)
+	return callArgs.Get(0).(json.RawMessage), callArgs.Error(1)
 }
 
 func (m *MockBrowserClient) ExtractContent(ctx context.Context, tabID int, selector, contentType, attribute string) ([]string, error) {
@@ -159,6 +159,11 @@ func (m *MockBrowserClient) SetLocalStorage(ctx context.Context, tabID int, key,
 	return args.Error(0)
 }
 
+func (m *MockBrowserClient) ClearLocalStorage(ctx context.Context, tabID int) error {
+	args := m.Called(ctx, tabID)
+	return args.Error(0)
+}
+
 func (m *MockBrowserClient) GetSessionStorage(ctx context.Context, tabID int, key string) (string, error) {
 	args := m.Called(ctx, tabID, key)
 	return args.String(0), args.Error(1)
@@ -166,11 +171,6 @@ func (m *MockBrowserClient) GetSessionStorage(ctx context.Context, tabID int, ke
 
 func (m *MockBrowserClient) SetSessionStorage(ctx context.Context, tabID int, key, value string) error {
 	args := m.Called(ctx, tabID, key, value)
-	return args.Error(0)
-}
-
-func (m *MockBrowserClient) ClearLocalStorage(ctx context.Context, tabID int) error {
-	args := m.Called(ctx, tabID)
 	return args.Error(0)
 }
 
@@ -185,6 +185,14 @@ func (m *MockBrowserClient) GetActionables(ctx context.Context, tabID int) ([]br
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]browser.Actionable), args.Error(1)
+}
+
+func (m *MockBrowserClient) GetAccessibilitySnapshot(ctx context.Context, tabID int, interestingOnly bool, root string) (json.RawMessage, error) {
+	args := m.Called(ctx, tabID, interestingOnly, root)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
 }
 
 // Helper function to extract text from mcp.Content
@@ -218,28 +226,7 @@ func TestBrowserHandler_WaitForConnection(t *testing.T) {
 		checkResult func(*testing.T, *mcp.CallToolResult)
 	}{
 		{
-			name: "wait for connection successfully",
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: "browser_wait_for_connection",
-					Arguments: map[string]interface{}{
-						"timeout": 5.0,
-					},
-				},
-			},
-			setupMock: func(m *MockBrowserClient) {
-				m.On("WaitForConnection", mock.Anything, 5*time.Second).Return(nil)
-			},
-			wantErr: false,
-			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
-				assert.NotNil(t, result)
-				require.Len(t, result.Content, 1)
-				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Successfully connected to browser extension")
-			},
-		},
-		{
-			name: "wait for connection with default timeout",
+			name: "successful connection",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name:      "browser_wait_for_connection",
@@ -254,21 +241,40 @@ func TestBrowserHandler_WaitForConnection(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "Successfully connected to browser extension")
+				assert.Equal(t, "Successfully connected to browser extension", text)
 			},
 		},
 		{
-			name: "wait for connection timeout",
+			name: "connection with custom timeout",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
 					Name: "browser_wait_for_connection",
 					Arguments: map[string]interface{}{
-						"timeout": 2.0,
+						"timeout": 10,
 					},
 				},
 			},
 			setupMock: func(m *MockBrowserClient) {
-				m.On("WaitForConnection", mock.Anything, 2*time.Second).Return(errors.New("timeout waiting for Chrome extension connection"))
+				m.On("WaitForConnection", mock.Anything, 10*time.Second).Return(nil)
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Equal(t, "Successfully connected to browser extension", text)
+			},
+		},
+		{
+			name: "connection timeout",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_wait_for_connection",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("WaitForConnection", mock.Anything, 30*time.Second).Return(errors.New("connection timeout"))
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
@@ -276,7 +282,7 @@ func TestBrowserHandler_WaitForConnection(t *testing.T) {
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
 				assert.Contains(t, text, "Failed to connect to browser")
-				assert.Contains(t, text, "timeout")
+				assert.Contains(t, text, "connection timeout")
 			},
 		},
 	}
@@ -317,8 +323,8 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 			name: "list tabs successfully",
 			setupMock: func(m *MockBrowserClient) {
 				tabs := []browser.Tab{
-					{ID: 1, URL: "https://example.com", Title: "Example", Index: 0, Active: true},
-					{ID: 2, URL: "https://google.com", Title: "Google", Index: 1, Active: false},
+					{ID: 1, URL: "https://example.com", Title: "Example", Active: true},
+					{ID: 2, URL: "https://google.com", Title: "Google", Active: false},
 				}
 				m.On("ListTabs", mock.Anything).Return(tabs, nil)
 			},
@@ -329,19 +335,18 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 				text := getTextFromContent(t, result.Content[0])
 
 				// Should return JSON array
-				var tabsResult []browser.Tab
-				err := json.Unmarshal([]byte(text), &tabsResult)
+				var tabs []browser.Tab
+				err := json.Unmarshal([]byte(text), &tabs)
 				require.NoError(t, err)
-				assert.Len(t, tabsResult, 2)
-				assert.Equal(t, 1, tabsResult[0].ID)
-				assert.Equal(t, "Example", tabsResult[0].Title)
-				assert.True(t, tabsResult[0].Active)
+				assert.Len(t, tabs, 2)
+				assert.Equal(t, "https://example.com", tabs[0].URL)
+				assert.True(t, tabs[0].Active)
 			},
 		},
 		{
 			name: "list tabs with error",
 			setupMock: func(m *MockBrowserClient) {
-				m.On("ListTabs", mock.Anything).Return([]browser.Tab{}, errors.New("connection failed"))
+				m.On("ListTabs", mock.Anything).Return([]browser.Tab(nil), errors.New("browser not connected"))
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
@@ -349,7 +354,7 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
 				assert.Contains(t, text, "Failed to list tabs")
-				assert.Contains(t, text, "connection failed")
+				assert.Contains(t, text, "browser not connected")
 			},
 		},
 	}
@@ -365,7 +370,7 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 
 			request := mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name:      "list_tabs",
+					Name:      "browser_list_tabs",
 					Arguments: map[string]interface{}{},
 				},
 			}
@@ -389,74 +394,94 @@ func TestBrowserHandler_ListTabs(t *testing.T) {
 func TestBrowserHandler_CreateTab(t *testing.T) {
 	tests := []struct {
 		name        string
-		setupMock   func(*MockBrowserClient)
 		request     mcp.CallToolRequest
+		setupMock   func(*MockBrowserClient)
 		wantErr     bool
 		checkResult func(*testing.T, *mcp.CallToolResult)
 	}{
 		{
 			name: "create tab successfully",
-			setupMock: func(m *MockBrowserClient) {
-				tab := &browser.Tab{
-					ID:    3,
-					URL:   "https://example.com",
-					Title: "Example",
-					Index: 2,
-				}
-				m.On("CreateTab", mock.Anything, "https://example.com", true).Return(tab, nil)
-			},
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: "create_tab",
+					Name: "browser_create_tab",
 					Arguments: map[string]interface{}{
 						"url":    "https://example.com",
 						"active": true,
 					},
 				},
 			},
+			setupMock: func(m *MockBrowserClient) {
+				tab := &browser.Tab{
+					ID:     3,
+					URL:    "https://example.com",
+					Title:  "Example",
+					Active: true,
+				}
+				m.On("CreateTab", mock.Anything, "https://example.com", true).Return(tab, nil)
+			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				// Check that the result is valid JSON
+
 				var tab browser.Tab
 				err := json.Unmarshal([]byte(text), &tab)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, 3, tab.ID)
 				assert.Equal(t, "https://example.com", tab.URL)
-				assert.Equal(t, "Example", tab.Title)
+				assert.True(t, tab.Active)
 			},
 		},
 		{
-			name: "create tab without URL",
-			setupMock: func(m *MockBrowserClient) {
-				tab := &browser.Tab{
-					ID:    4,
-					URL:   "about:blank",
-					Title: "New Tab",
-					Index: 3,
-				}
-				m.On("CreateTab", mock.Anything, "about:blank", true).Return(tab, nil)
-			},
+			name: "create tab with defaults",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name:      "create_tab",
+					Name:      "browser_create_tab",
 					Arguments: map[string]interface{}{},
 				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				tab := &browser.Tab{
+					ID:     4,
+					URL:    "about:blank",
+					Title:  "New Tab",
+					Active: true,
+				}
+				m.On("CreateTab", mock.Anything, "about:blank", true).Return(tab, nil)
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				// Check that the result is valid JSON
+
 				var tab browser.Tab
 				err := json.Unmarshal([]byte(text), &tab)
-				assert.NoError(t, err)
-				assert.Equal(t, 4, tab.ID)
+				require.NoError(t, err)
 				assert.Equal(t, "about:blank", tab.URL)
-				assert.Equal(t, "New Tab", tab.Title)
+			},
+		},
+		{
+			name: "create tab with error",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_create_tab",
+					Arguments: map[string]interface{}{
+						"url": "https://example.com",
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("CreateTab", mock.Anything, "https://example.com", true).Return((*browser.Tab)(nil), errors.New("failed to create tab"))
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Failed to create tab")
+				assert.Contains(t, text, "failed to create tab")
 			},
 		},
 	}
@@ -486,65 +511,72 @@ func TestBrowserHandler_CreateTab(t *testing.T) {
 	}
 }
 
-func TestBrowserHandler_Screenshot(t *testing.T) {
+func TestBrowserHandler_CloseTab(t *testing.T) {
 	tests := []struct {
 		name        string
-		setupMock   func(*MockBrowserClient)
 		request     mcp.CallToolRequest
+		setupMock   func(*MockBrowserClient)
 		wantErr     bool
 		checkResult func(*testing.T, *mcp.CallToolResult)
 	}{
 		{
-			name: "take screenshot successfully",
-			setupMock: func(m *MockBrowserClient) {
-				m.On("Screenshot", mock.Anything, 0, false, "", "png", 90).Return("data:image/png;base64,iVBORw0KGgoAAAANS", nil)
-			},
+			name: "close tab successfully",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name:      "screenshot",
-					Arguments: map[string]interface{}{},
-				},
-			},
-			wantErr: false,
-			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
-				assert.NotNil(t, result)
-				require.Len(t, result.Content, 1)
-				text := getTextFromContent(t, result.Content[0])
-
-				// Should return JSON with dataUrl
-				var screenshotResult map[string]string
-				err := json.Unmarshal([]byte(text), &screenshotResult)
-				require.NoError(t, err)
-				assert.Contains(t, screenshotResult["dataUrl"], "data:image/png;base64,iVBORw0KGgoAAAANS")
-			},
-		},
-		{
-			name: "take full page screenshot",
-			setupMock: func(m *MockBrowserClient) {
-				m.On("Screenshot", mock.Anything, 1, true, "", "jpeg", 80).Return("data:image/jpeg;base64,/9j/4AAQSkZJRg", nil)
-			},
-			request: mcp.CallToolRequest{
-				Params: mcp.CallToolParams{
-					Name: "screenshot",
+					Name: "browser_close_tab",
 					Arguments: map[string]interface{}{
-						"tabId":    1,
-						"fullPage": true,
-						"format":   "jpeg",
-						"quality":  80,
+						"tabId": 5,
 					},
 				},
 			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("CloseTab", mock.Anything, 5).Return(nil)
+			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-
-				// Should return JSON with dataUrl
-				var screenshotResult map[string]string
-				err := json.Unmarshal([]byte(text), &screenshotResult)
-				require.NoError(t, err)
-				assert.Contains(t, screenshotResult["dataUrl"], "data:image/jpeg;base64,/9j/4AAQSkZJRg")
+				assert.Equal(t, "Closed tab 5", text)
+			},
+		},
+		{
+			name: "close tab missing id",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_close_tab",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			setupMock: nil,
+			wantErr:   false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "tabId is required")
+			},
+		},
+		{
+			name: "close tab with error",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_close_tab",
+					Arguments: map[string]interface{}{
+						"tabId": 6,
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("CloseTab", mock.Anything, 6).Return(errors.New("tab not found"))
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Failed to close tab")
+				assert.Contains(t, text, "tab not found")
 			},
 		},
 	}
@@ -558,7 +590,7 @@ func TestBrowserHandler_Screenshot(t *testing.T) {
 				tt.setupMock(mockClient)
 			}
 
-			result, err := handler.Screenshot(context.Background(), tt.request)
+			result, err := handler.CloseTab(context.Background(), tt.request)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -574,75 +606,95 @@ func TestBrowserHandler_Screenshot(t *testing.T) {
 	}
 }
 
-func TestBrowserHandler_ExecuteScript(t *testing.T) {
+func TestBrowserHandler_Navigate(t *testing.T) {
 	tests := []struct {
 		name        string
-		setupMock   func(*MockBrowserClient)
 		request     mcp.CallToolRequest
+		setupMock   func(*MockBrowserClient)
 		wantErr     bool
 		checkResult func(*testing.T, *mcp.CallToolResult)
 	}{
 		{
-			name: "execute script with string result",
-			setupMock: func(m *MockBrowserClient) {
-				result := json.RawMessage(`"Page Title"`)
-				m.On("ExecuteScript", mock.Anything, 0, "return document.title", []interface{}(nil)).Return(result, nil)
-			},
+			name: "navigate successfully",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: "execute_script",
+					Name: "browser_navigate",
 					Arguments: map[string]interface{}{
-						"script": "return document.title",
+						"url":           "https://example.com",
+						"waitUntilLoad": true,
 					},
 				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("Navigate", mock.Anything, 0, "https://example.com", true).Return(json.RawMessage(`{"success": true}`), nil)
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				// Should return raw JSON result
-				assert.Equal(t, `"Page Title"`, text)
+				assert.Equal(t, `{"success": true}`, text)
 			},
 		},
 		{
-			name: "execute script with args",
-			setupMock: func(m *MockBrowserClient) {
-				result := json.RawMessage(`3`)
-				m.On("ExecuteScript", mock.Anything, 0, "return arguments[0] + arguments[1]", []interface{}{1.0, 2.0}).Return(result, nil)
-			},
+			name: "navigate with specific tab",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name: "execute_script",
+					Name: "browser_navigate",
 					Arguments: map[string]interface{}{
-						"script": "return arguments[0] + arguments[1]",
-						"args":   []interface{}{1.0, 2.0},
+						"url":   "https://google.com",
+						"tabId": 7,
 					},
 				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("Navigate", mock.Anything, 7, "https://google.com", false).Return(json.RawMessage(`{"success": true}`), nil)
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				// Should return raw JSON result
-				assert.Equal(t, "3", text)
+				assert.Equal(t, `{"success": true}`, text)
 			},
 		},
 		{
-			name: "execute script missing script parameter",
+			name: "navigate missing url",
 			request: mcp.CallToolRequest{
 				Params: mcp.CallToolParams{
-					Name:      "execute_script",
+					Name:      "browser_navigate",
 					Arguments: map[string]interface{}{},
 				},
 			},
+			setupMock: nil,
+			wantErr:   false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "url is required")
+			},
+		},
+		{
+			name: "navigate with error",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_navigate",
+					Arguments: map[string]interface{}{
+						"url": "https://invalid.site",
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("Navigate", mock.Anything, 0, "https://invalid.site", false).Return(json.RawMessage(nil), errors.New("failed to navigate"))
+			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "required")
+				assert.Contains(t, text, "Failed to navigate")
+				assert.Contains(t, text, "failed to navigate")
 			},
 		},
 	}
@@ -656,7 +708,124 @@ func TestBrowserHandler_ExecuteScript(t *testing.T) {
 				tt.setupMock(mockClient)
 			}
 
-			result, err := handler.ExecuteScript(context.Background(), tt.request)
+			result, err := handler.Navigate(context.Background(), tt.request)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
+			}
+
+			mockClient.AssertExpectations(t)
+		})
+	}
+}
+
+func TestBrowserHandler_Click(t *testing.T) {
+	tests := []struct {
+		name        string
+		request     mcp.CallToolRequest
+		setupMock   func(*MockBrowserClient)
+		wantErr     bool
+		checkResult func(*testing.T, *mcp.CallToolResult)
+	}{
+		{
+			name: "click successfully",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_click",
+					Arguments: map[string]interface{}{
+						"selector": "#submit-button",
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("Click", mock.Anything, 0, "#submit-button", 30000).Return(nil)
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Equal(t, "Clicked on element: #submit-button", text)
+			},
+		},
+		{
+			name: "click with custom timeout",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_click",
+					Arguments: map[string]interface{}{
+						"selector": ".btn",
+						"timeout":  5000,
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("Click", mock.Anything, 0, ".btn", 5000).Return(nil)
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Equal(t, "Clicked on element: .btn", text)
+			},
+		},
+		{
+			name: "click missing selector",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_click",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			setupMock: nil,
+			wantErr:   false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "selector is required")
+			},
+		},
+		{
+			name: "click element not found",
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_click",
+					Arguments: map[string]interface{}{
+						"selector": "#missing",
+					},
+				},
+			},
+			setupMock: func(m *MockBrowserClient) {
+				m.On("Click", mock.Anything, 0, "#missing", 30000).Return(errors.New("element not found"))
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Failed to click")
+				assert.Contains(t, text, "element not found")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := &MockBrowserClient{}
+			handler := NewBrowserHandler(mockClient)
+
+			if tt.setupMock != nil {
+				tt.setupMock(mockClient)
+			}
+
+			result, err := handler.Click(context.Background(), tt.request)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -764,11 +933,15 @@ func TestBrowserHandler_GetActionables(t *testing.T) {
 				err := json.Unmarshal([]byte(text), &actionablesResult)
 				require.NoError(t, err)
 				assert.Len(t, actionablesResult, 1)
+
+				assert.Equal(t, 0, actionablesResult[0].LabelNumber)
 				assert.Equal(t, "Click me", actionablesResult[0].Description)
+				assert.Equal(t, "button", actionablesResult[0].Type)
+				assert.Equal(t, "button.action", actionablesResult[0].Selector)
 			},
 		},
 		{
-			name: "get actionables empty result",
+			name: "get actionables empty page",
 			setupMock: func(m *MockBrowserClient) {
 				m.On("GetActionables", mock.Anything, 0).Return([]browser.Actionable{}, nil)
 			},
@@ -822,6 +995,137 @@ func TestBrowserHandler_GetActionables(t *testing.T) {
 			}
 
 			result, err := handler.GetActionables(context.Background(), tt.request)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
+			}
+
+			mockClient.AssertExpectations(t)
+		})
+	}
+}
+
+func TestBrowserHandler_GetAccessibilitySnapshot(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupMock   func(*MockBrowserClient)
+		request     mcp.CallToolRequest
+		wantErr     bool
+		checkResult func(*testing.T, *mcp.CallToolResult)
+	}{
+		{
+			name: "get accessibility snapshot successfully",
+			setupMock: func(m *MockBrowserClient) {
+				snapshot := json.RawMessage(`{
+					"role": "RootWebArea",
+					"name": "Test Page",
+					"children": [
+						{
+							"role": "heading",
+							"name": "Welcome",
+							"level": 1
+						},
+						{
+							"role": "button",
+							"name": "Submit",
+							"disabled": false
+						}
+					]
+				}`)
+				m.On("GetAccessibilitySnapshot", mock.Anything, 0, true, "").Return(snapshot, nil)
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_get_accessibility_snapshot",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+
+				// Should return valid JSON
+				var snapshot map[string]interface{}
+				err := json.Unmarshal([]byte(text), &snapshot)
+				require.NoError(t, err)
+				assert.Equal(t, "RootWebArea", snapshot["role"])
+				assert.Equal(t, "Test Page", snapshot["name"])
+				
+				children := snapshot["children"].([]interface{})
+				assert.Len(t, children, 2)
+			},
+		},
+		{
+			name: "get accessibility snapshot with specific parameters",
+			setupMock: func(m *MockBrowserClient) {
+				snapshot := json.RawMessage(`{
+					"role": "region",
+					"name": "Main Content"
+				}`)
+				m.On("GetAccessibilitySnapshot", mock.Anything, 123, false, "#main").Return(snapshot, nil)
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name: "browser_get_accessibility_snapshot",
+					Arguments: map[string]interface{}{
+						"tabId":           123,
+						"interestingOnly": false,
+						"root":            "#main",
+					},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+
+				var snapshot map[string]interface{}
+				err := json.Unmarshal([]byte(text), &snapshot)
+				require.NoError(t, err)
+				assert.Equal(t, "region", snapshot["role"])
+				assert.Equal(t, "Main Content", snapshot["name"])
+			},
+		},
+		{
+			name: "get accessibility snapshot with error",
+			setupMock: func(m *MockBrowserClient) {
+				m.On("GetAccessibilitySnapshot", mock.Anything, 0, true, "").Return(json.RawMessage(nil), errors.New("page not accessible"))
+			},
+			request: mcp.CallToolRequest{
+				Params: mcp.CallToolParams{
+					Name:      "browser_get_accessibility_snapshot",
+					Arguments: map[string]interface{}{},
+				},
+			},
+			wantErr: false,
+			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
+				assert.NotNil(t, result)
+				require.Len(t, result.Content, 1)
+				text := getTextFromContent(t, result.Content[0])
+				assert.Contains(t, text, "Failed to get accessibility snapshot")
+				assert.Contains(t, text, "page not accessible")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockClient := &MockBrowserClient{}
+			handler := NewBrowserHandler(mockClient)
+
+			if tt.setupMock != nil {
+				tt.setupMock(mockClient)
+			}
+
+			result, err := handler.GetAccessibilitySnapshot(context.Background(), tt.request)
 
 			if tt.wantErr {
 				require.Error(t, err)

@@ -67,6 +67,7 @@ func (s *Server) registerTools() {
 	s.registerExtractTextTool()
 	s.registerScreenshotTool()
 	s.registerGetActionablesTool()
+	s.registerGetAccessibilitySnapshotTool()
 
 	// Storage Tools
 	s.registerCookieTools()
@@ -378,6 +379,25 @@ func (s *Server) registerGetActionablesTool() {
 
 	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return s.handler.GetActionables(ctx, request)
+	})
+}
+
+func (s *Server) registerGetAccessibilitySnapshotTool() {
+	tool := mcp.NewTool("browser_get_accessibility_snapshot",
+		mcp.WithDescription("Get the accessibility tree of the page for understanding page structure and elements"),
+		mcp.WithNumber("tabId",
+			mcp.Description("Tab ID to get snapshot from (defaults to active tab)"),
+		),
+		mcp.WithBoolean("interestingOnly",
+			mcp.Description("Only return nodes with semantic meaning (default: true)"),
+		),
+		mcp.WithString("root",
+			mcp.Description("CSS selector for the root element to start from (defaults to document body)"),
+		),
+	)
+
+	s.mcpServer.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		return s.handler.GetAccessibilitySnapshot(ctx, request)
 	})
 }
 

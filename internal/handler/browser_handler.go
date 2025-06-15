@@ -555,3 +555,18 @@ func (h *BrowserHandler) ExtractText(ctx context.Context, request mcp.CallToolRe
 	// Return as plain text
 	return mcp.NewToolResultText(text), nil
 }
+
+// GetAccessibilitySnapshot gets the accessibility tree of the page
+func (h *BrowserHandler) GetAccessibilitySnapshot(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	tabID := request.GetInt("tabId", 0)
+	interestingOnly := request.GetBool("interestingOnly", true)
+	root := request.GetString("root", "")
+
+	snapshot, err := h.client.GetAccessibilitySnapshot(ctx, tabID, interestingOnly, root)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get accessibility snapshot: %v", err)), nil
+	}
+
+	// Return snapshot as JSON string
+	return mcp.NewToolResultText(string(snapshot)), nil
+}
