@@ -554,7 +554,7 @@ func TestBrowserHandler_CloseTab(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "tabId is required")
+				assert.Contains(t, text, "required argument \"tabId\" not found")
 			},
 		},
 		{
@@ -648,7 +648,7 @@ func TestBrowserHandler_Navigate(t *testing.T) {
 				},
 			},
 			setupMock: func(m *MockBrowserClient) {
-				m.On("Navigate", mock.Anything, 7, "https://google.com", false).Return(json.RawMessage(`{"success": true}`), nil)
+				m.On("Navigate", mock.Anything, 7, "https://google.com", true).Return(json.RawMessage(`{"success": true}`), nil)
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
@@ -672,7 +672,7 @@ func TestBrowserHandler_Navigate(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "url is required")
+				assert.Contains(t, text, "required argument \"url\" not found")
 			},
 		},
 		{
@@ -686,7 +686,7 @@ func TestBrowserHandler_Navigate(t *testing.T) {
 				},
 			},
 			setupMock: func(m *MockBrowserClient) {
-				m.On("Navigate", mock.Anything, 0, "https://invalid.site", false).Return(json.RawMessage(nil), errors.New("failed to navigate"))
+				m.On("Navigate", mock.Anything, 0, "https://invalid.site", true).Return(json.RawMessage(nil), errors.New("failed to navigate"))
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, result *mcp.CallToolResult) {
@@ -789,7 +789,7 @@ func TestBrowserHandler_Click(t *testing.T) {
 				assert.NotNil(t, result)
 				require.Len(t, result.Content, 1)
 				text := getTextFromContent(t, result.Content[0])
-				assert.Contains(t, text, "selector is required")
+				assert.Contains(t, text, "required argument \"selector\" not found")
 			},
 		},
 		{
