@@ -1,77 +1,34 @@
 # Get Accessibility Snapshot of Current Tab
 # Simple example showing how to analyze the accessibility tree of the active tab
+#
+# Prerequisites:
+# 1. Browser with Perix extension installed
+# 2. Extension connected to the WebSocket server
 
 # Connect to the MCP browser server
 connect "./bin/mcp-browser-server"
 
 # Wait for browser extension
-call browser_wait_for_connection {timeout: 5}
+print "Waiting for browser extension connection..."
+call browser_wait_for_connection {timeout: 30} -> connection_result
+print connection_result
 
-print "=== Accessibility Snapshot of Current Tab ==="
+print "\n=== Accessibility Snapshot of Current Tab ==="
 
 # Get accessibility snapshot of the current active tab (tabId defaults to 0 = active tab)
-call browser_get_accessibility_snapshot {} -> snapshot
+print "Getting accessibility snapshot..."
+call browser_get_accessibility_snapshot {} -> snapshot_result
 
-# Display basic information
-print "\nPage Accessibility Information:"
-print "Role: " + snapshot.role
-if snapshot.name {
-  print "Name: " + snapshot.name
-}
+# The result is returned as a JSON string
+print "\nResult received!"
+print "Length: " + str(len(str(snapshot_result))) + " characters"
 
-# Count different types of elements
-elementCounts = {}
+# Just print the full result - in a real app you'd parse this JSON
+print "\nAccessibility snapshot:"
+print snapshot_result
 
-function countElements(node) {
-  role = node.role || "unknown"
-  if elementCounts[role] {
-    elementCounts[role] = elementCounts[role] + 1
-  } else {
-    elementCounts[role] = 1
-  }
-  
-  if node.children {
-    for child in node.children {
-      countElements(child)
-    }
-  }
-}
-
-countElements(snapshot)
-
-print "\nElement Types Found:"
-for role in Object.keys(elementCounts).sort() {
-  print "  " + role + ": " + elementCounts[role]
-}
-
-# Show page structure
-print "\nPage Structure (first 2 levels):"
-function showStructure(node, indent, maxDepth) {
-  if maxDepth <= 0 {
-    return
-  }
-  
-  prefix = "  ".repeat(indent)
-  nodeInfo = node.role
-  if node.name {
-    nodeInfo = nodeInfo + ' "' + node.name + '"'
-  }
-  
-  print prefix + "- " + nodeInfo
-  
-  if node.children && node.children.length > 0 {
-    # Show up to 5 children per level
-    childrenToShow = Math.min(node.children.length, 5)
-    for i in range(0, childrenToShow) {
-      showStructure(node.children[i], indent + 1, maxDepth - 1)
-    }
-    
-    if node.children.length > 5 {
-      print prefix + "  ... and " + (node.children.length - 5) + " more"
-    }
-  }
-}
-
-showStructure(snapshot, 0, 2)
-
-print "\n✓ Accessibility analysis complete!"
+print "\n✓ Example completed!"
+print "\nNote: If you see an error above, make sure:"
+print "1. Browser with Perix extension is open"
+print "2. Extension is connected (check extension popup)"
+print "3. A web page is loaded in the active tab"

@@ -1,24 +1,33 @@
 # Accessibility Snapshot Example
 # Demonstrates how to get the accessibility tree of a web page
+#
+# Prerequisites:
+# 1. Browser with Perix extension installed
+# 2. Extension connected to the WebSocket server
 
 # Connect to the MCP browser server
 connect "./bin/mcp-browser-server"
 
 # Wait for browser extension
-call browser_wait_for_connection {timeout: 5}
+print "Waiting for browser extension connection..."
+call browser_wait_for_connection {timeout: 30} -> connection_result
+print connection_result
 
 # List existing tabs
 call browser_list_tabs -> tabs
 
-if tabs.length == 0 {
+if len(tabs) == 0 {
+  print "\nNo tabs found. Creating a new tab..."
   # Create a new tab if none exist
   call browser_create_tab {
     url: "https://www.w3.org/WAI/ARIA/apg/patterns/",
     active: true
   } -> tab
+  print "Created tab: " + str(tab.id)
 } else {
   # Use the first tab
-  tab = tabs[0]
+  set tab = tabs[0]
+  print "\nUsing existing tab: " + str(tab.id)
   
   # Navigate to the ARIA patterns page
   call browser_navigate {
@@ -27,37 +36,37 @@ if tabs.length == 0 {
   }
 }
 
-print "=== Accessibility Snapshot Example ==="
-print "Current tab: " + tab.title + " (" + tab.url + ")"
+print "\n=== Accessibility Snapshot Example ==="
 
 # Wait for page to load
+print "Waiting for page to load..."
 call browser_wait_for_element {
   tabId: tab.id,
   selector: "main",
   timeout: 5000
-}
+} -> wait_result
 
-# Get the full accessibility snapshot
+# Example 1: Get the full accessibility snapshot
 print "\n1. Full Accessibility Snapshot (interesting nodes only):"
 call browser_get_accessibility_snapshot {
   tabId: tab.id,
   interestingOnly: true
 } -> snapshot
 
-print "Root role: " + snapshot.role
-print "Page name: " + snapshot.name
-print "Number of direct children: " + snapshot.children.length
+print "Successfully retrieved accessibility snapshot"
+print "Snapshot length: " + str(len(str(snapshot))) + " characters"
 
-# Get a more detailed snapshot (all nodes)
+# Example 2: Get a more detailed snapshot (all nodes)
 print "\n2. Detailed Accessibility Snapshot (all nodes):"
 call browser_get_accessibility_snapshot {
   tabId: tab.id,
   interestingOnly: false
 } -> detailedSnapshot
 
-print "Total accessible elements found (including all nodes)"
+print "Successfully retrieved detailed snapshot"
+print "Detailed snapshot length: " + str(len(str(detailedSnapshot))) + " characters"
 
-# Get accessibility snapshot of a specific region
+# Example 3: Get accessibility snapshot of a specific region
 print "\n3. Accessibility Snapshot of Main Content:"
 call browser_get_accessibility_snapshot {
   tabId: tab.id,
@@ -65,69 +74,16 @@ call browser_get_accessibility_snapshot {
   root: "main"
 } -> mainSnapshot
 
-print "Main content role: " + mainSnapshot.role
-if mainSnapshot.name {
-  print "Main content name: " + mainSnapshot.name
-}
+print "Successfully retrieved main content snapshot"
+print "Main content snapshot length: " + str(len(str(mainSnapshot))) + " characters"
 
-# Find all headings in the accessibility tree
-print "\n4. Finding Headings in Accessibility Tree:"
-headings = []
+# Show a small portion of the main content snapshot
+print "\nMain content snapshot (truncated for display):"
+print "Note: In a real application, you would parse this JSON data"
 
-function findHeadings(node) {
-  if node.role == "heading" {
-    headings.push({
-      name: node.name,
-      level: node.level
-    })
-  }
-  
-  if node.children {
-    for child in node.children {
-      findHeadings(child)
-    }
-  }
-}
-
-findHeadings(snapshot)
-
-print "Found " + headings.length + " headings:"
-for heading in headings {
-  print "  Level " + heading.level + ": " + heading.name
-}
-
-# Find all interactive elements
-print "\n5. Finding Interactive Elements:"
-interactiveElements = []
-
-function findInteractive(node) {
-  interactiveRoles = ["button", "link", "textbox", "checkbox", "radio", "combobox", "menuitem"]
-  
-  if interactiveRoles.includes(node.role) {
-    interactiveElements.push({
-      role: node.role,
-      name: node.name || "(unnamed)",
-      disabled: node.disabled || false
-    })
-  }
-  
-  if node.children {
-    for child in node.children {
-      findInteractive(child)
-    }
-  }
-}
-
-findInteractive(snapshot)
-
-print "Found " + interactiveElements.length + " interactive elements:"
-for elem in interactiveElements.slice(0, 10) {  # Show first 10
-  status = elem.disabled ? " (disabled)" : ""
-  print "  " + elem.role + ": " + elem.name + status
-}
-
-if interactiveElements.length > 10 {
-  print "  ... and " + (interactiveElements.length - 10) + " more"
-}
-
-print "\n✓ Accessibility snapshot example completed!"
+print "\n✓ Accessibility snapshot examples completed!"
+print "\nThe accessibility snapshots contain JSON data with the following structure:"
+print "- role: The ARIA role of the element"
+print "- name: The accessible name/label" 
+print "- children: Nested child elements"
+print "- And other accessibility properties"
