@@ -58,6 +58,7 @@ if len(targetLinks) > 0 {
   
   # Click on the first link with the specified class
   print "\nClicking on the first link..."
+  # The browser_click function doesn't return a value, so we shouldn't assign it
   call browser_click {
     tabId: tab.id,
     selector: "a.pink-common-link.D\\(ib\\)"
