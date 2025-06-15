@@ -723,3 +723,27 @@ func stripHTMLTags(html string) string {
 
 	return strings.Join(cleanedLines, "\n")
 }
+
+// GetAccessibilitySnapshot gets the accessibility tree of the page
+func (c *Client) GetAccessibilitySnapshot(ctx context.Context, tabID int, interestingOnly bool, root string) (json.RawMessage, error) {
+	// Default to active tab if not specified
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId":           tabID,
+		"interestingOnly": interestingOnly,
+	}
+
+	if root != "" {
+		params["root"] = root
+	}
+
+	result, err := c.sendCommand(ctx, "tabs.getAccessibilitySnapshot", params)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

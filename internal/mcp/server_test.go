@@ -100,6 +100,10 @@ func (m *MockBrowserClient) GetActionables(ctx context.Context, tabID int) ([]br
 	return nil, nil
 }
 
+func (m *MockBrowserClient) GetAccessibilitySnapshot(ctx context.Context, tabID int, interestingOnly bool, root string) (json.RawMessage, error) {
+	return nil, nil
+}
+
 func TestNewServer(t *testing.T) {
 	tests := []struct {
 		name    string
