@@ -214,6 +214,22 @@ func (c *Client) ActivateTab(ctx context.Context, tabID int) error {
 	return err
 }
 
+// SendKey sends keyboard key events to the browser
+func (c *Client) SendKey(ctx context.Context, key string, modifiers map[string]bool, tabID int) error {
+	if tabID == 0 {
+		tabID = c.activeTabID
+	}
+
+	params := map[string]interface{}{
+		"tabId":     tabID,
+		"key":       key,
+		"modifiers": modifiers,
+	}
+
+	_, err := c.sendCommand(ctx, "sendKey", params)
+	return err
+}
+
 // Navigation Methods
 
 // Navigate navigates to a URL in a tab

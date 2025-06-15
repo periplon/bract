@@ -28,6 +28,9 @@ func (m *MockBrowserClient) CreateTab(ctx context.Context, url string, active bo
 }
 func (m *MockBrowserClient) CloseTab(ctx context.Context, tabID int) error    { return nil }
 func (m *MockBrowserClient) ActivateTab(ctx context.Context, tabID int) error { return nil }
+func (m *MockBrowserClient) SendKey(ctx context.Context, key string, modifiers map[string]bool, tabID int) error {
+	return nil
+}
 func (m *MockBrowserClient) Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error) {
 	return nil, nil
 }

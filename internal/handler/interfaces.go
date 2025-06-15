@@ -22,6 +22,7 @@ type BrowserClient interface {
 	CreateTab(ctx context.Context, url string, active bool) (*browser.Tab, error)
 	CloseTab(ctx context.Context, tabID int) error
 	ActivateTab(ctx context.Context, tabID int) error
+	SendKey(ctx context.Context, key string, modifiers map[string]bool, tabID int) error
 
 	// Navigation
 	Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error)
