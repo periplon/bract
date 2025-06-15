@@ -2,7 +2,7 @@
 # Gets all actionable elements from Gmail and lists them categorized by type
 
 # Connect to the MCP browser server
-connect "../../bin/mcp-browser-server"
+connect "./bin/mcp-browser-server"
 
 # Wait for browser extension to connect
 call browser_wait_for_connection {
@@ -41,41 +41,41 @@ set checkboxes = []
 set other_buttons = []
 set other_inputs = []
 set other_links = []
+set textareas = []
+set selects = []
 
 # Categorize actionables
 loop item in actionables {
-  set desc_lower = lower(item.description)
-  
+  # Check for compose/new message buttons
   if item.type == "button" || item.type == "a" {
-    if contains(desc_lower, "compose") || contains(desc_lower, "new message") {
+    # Look for compose-related keywords in description
+    if item.description == "Compose" || item.description == "New Message" || item.description == "New message" || item.description == "Compose new message" {
       set compose_buttons = compose_buttons + [item]
     }
-    if contains(desc_lower, "menu") || contains(desc_lower, "settings") || contains(desc_lower, "more") {
-      set menu_buttons = menu_buttons + [item]
-    }
-    if item.type == "button" && !contains(desc_lower, "compose") && !contains(desc_lower, "new message") && !contains(desc_lower, "menu") && !contains(desc_lower, "settings") && !contains(desc_lower, "more") {
-      set other_buttons = other_buttons + [item]
-    }
-    if item.type == "a" && !contains(desc_lower, "compose") && !contains(desc_lower, "new message") {
-      set other_links = other_links + [item]
-    }
+  }
+  
+  # Categorize by type
+  if item.type == "a" {
+    set navigation_links = navigation_links + [item]
+  }
+  if item.type == "button" {
+    set other_buttons = other_buttons + [item]
   }
   if item.type == "input" {
-    if contains(desc_lower, "search") {
+    # Check if it's a search input by common search-related descriptions
+    if item.description == "Search" || item.description == "Search mail" || item.description == "Search in mail" {
       set search_inputs = search_inputs + [item]
     }
-    if !contains(desc_lower, "search") {
-      set other_inputs = other_inputs + [item]
-    }
+    set other_inputs = other_inputs + [item]
+  }
+  if item.type == "textarea" {
+    set textareas = textareas + [item]
+  }
+  if item.type == "select" {
+    set selects = selects + [item]
   }
   if item.type == "input[type=\"checkbox\"]" {
     set checkboxes = checkboxes + [item]
-  }
-  if contains(str(item.selector), "role=\"link\"") {
-    set email_items = email_items + [item]
-  }
-  if item.type == "a" && !contains(str(item.selector), "role=\"link\"") {
-    set navigation_links = navigation_links + [item]
   }
 }
 
@@ -83,62 +83,82 @@ loop item in actionables {
 print "\n=== Gmail Actionable Items Summary ==="
 print "Total actionable elements: " + str(len(actionables))
 print ""
-print "Compose Buttons: " + str(len(compose_buttons))
-print "Email Items: " + str(len(email_items))
-print "Navigation Links: " + str(len(navigation_links))
-print "Search Inputs: " + str(len(search_inputs))
-print "Menu Buttons: " + str(len(menu_buttons))
+print "Links: " + str(len(navigation_links))
+print "Buttons: " + str(len(other_buttons))
+print "Input fields: " + str(len(other_inputs))
+print "Search inputs: " + str(len(search_inputs))
+print "Textareas: " + str(len(textareas))
+print "Select dropdowns: " + str(len(selects))
 print "Checkboxes: " + str(len(checkboxes))
-print "Other Buttons: " + str(len(other_buttons))
-print "Other Inputs: " + str(len(other_inputs))
-print "Other Links: " + str(len(other_links))
 
 # Display key Gmail actions
 print "\n=== Key Gmail Actions ==="
 
 if len(compose_buttons) > 0 {
-  print "\nCompose/New Message:"
+  print "\nCompose/New Message Buttons:"
   loop item in compose_buttons {
     print "  [" + str(item.labelNumber) + "] " + item.description
   }
 }
 
 if len(search_inputs) > 0 {
-  print "\nSearch:"
+  print "\nSearch Inputs:"
   loop item in search_inputs {
     print "  [" + str(item.labelNumber) + "] " + item.description
   }
 }
 
-if len(email_items) > 0 {
-  print "\nEmail Items (clickable emails):"
-  # Show first 5 email items
+# Show first 10 buttons
+if len(other_buttons) > 0 {
+  print "\nButtons (first 10):"
   set count = 0
-  loop item in email_items {
-    if count < 5 {
+  loop item in other_buttons {
+    if count < 10 {
       print "  [" + str(item.labelNumber) + "] " + item.description
       set count = count + 1
     }
   }
-  if len(email_items) > 5 {
-    print "  ... and " + str(len(email_items) - 5) + " more emails"
+  if len(other_buttons) > 10 {
+    print "  ... and " + str(len(other_buttons) - 10) + " more buttons"
+  }
+}
+
+# Show first 10 links
+if len(navigation_links) > 0 {
+  print "\nLinks (first 10):"
+  set count = 0
+  loop item in navigation_links {
+    if count < 10 {
+      print "  [" + str(item.labelNumber) + "] " + item.description
+      set count = count + 1
+    }
+  }
+  if len(navigation_links) > 10 {
+    print "  ... and " + str(len(navigation_links) - 10) + " more links"
   }
 }
 
 if len(checkboxes) > 0 {
-  print "\nSelection Checkboxes:"
+  print "\nCheckboxes:"
   loop item in checkboxes {
     print "  [" + str(item.labelNumber) + "] " + item.description
   }
 }
 
-# Display all actionables with details
-print "\n=== All Actionable Elements ==="
+# Display detailed list of all elements
+print "\n=== All Actionable Elements (Detailed) ==="
+set displayed = 0
 loop item in actionables {
-  print "[" + str(item.labelNumber) + "] " + item.type + ": " + item.description
-  if item.selector != "" {
-    print "    Selector: " + item.selector
+  if displayed < 30 {  # Limit to first 30 for readability
+    print "[" + str(item.labelNumber) + "] " + item.type + ": " + item.description
+    if item.selector != "" {
+      print "    Selector: " + item.selector
+    }
+    set displayed = displayed + 1
   }
+}
+if len(actionables) > 30 {
+  print "\n... and " + str(len(actionables) - 30) + " more elements"
 }
 
 # Close the tab
