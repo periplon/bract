@@ -1,78 +1,87 @@
-// Extract and analyze article text from news/blog websites
-// This example shows how to extract clean text from articles
-// and perform basic text analysis
+# Extract and analyze article text from news/blog websites
+# This example shows how to extract clean text from articles
+# and perform basic text analysis
 
-// Connect to browser extension
-connect
+# Connect to browser extension server
+connect "./bin/mcp-browser-server"
 
-// Common article selectors for popular websites
-articleSelectors = "article, main article, .post-content, .entry-content, .article-body, .story-body, [itemprop='articleBody']"
+# Wait for browser extension to connect
+call browser_wait_for_connection {
+    timeout: 5
+} -> connection_result
+print "Browser connection status:"
+print connection_result
 
-// Extract article title
-print("Extracting article title...")
-title -> browser_extract_text({
+# Common article selectors for popular websites
+set articleSelectors = "article, main article, .post-content, .entry-content, .article-body, .story-body, [itemprop='articleBody']"
+
+# Extract article title
+print "\nExtracting article title..."
+call browser_extract_text {
     selector: "h1, article h1, .article-title, .post-title, [itemprop='headline']"
-})
-print("Title: " + title)
-
-// Extract article content
-print("\nExtracting article content...")
-articleText -> browser_extract_text({
-    selector: articleSelectors
-})
-
-if (len(articleText) > 0) {
-    // Basic text analysis
-    wordCount = len(articleText.split(" "))
-    charCount = len(articleText)
-    
-    print("Article Analysis:")
-    print("- Word count: " + str(wordCount))
-    print("- Character count: " + str(charCount))
-    print("- Estimated reading time: " + str(wordCount / 200) + " minutes")
-    
-    // Extract first paragraph as summary
-    paragraphs = articleText.split("\n\n")
-    if (len(paragraphs) > 0) {
-        print("\nFirst paragraph (summary):")
-        print(paragraphs[0])
-    }
-    
-    // Save to variable for further processing
-    print("\nArticle text extracted successfully!")
-    print("Text is now available in 'articleText' variable")
-    
-    // Example: Search for keywords
-    keywords = ["AI", "technology", "innovation", "future"]
-    print("\nKeyword analysis:")
-    for (keyword in keywords) {
-        if (articleText.indexOf(keyword) != -1) {
-            print("- Found keyword: " + keyword)
-        }
-    }
+} -> title
+if len(title) > 0 {
+    print "Title found: " + str(len(title)) + " characters"
 } else {
-    print("No article content found. This might not be an article page.")
-    print("Trying to extract all text content...")
+    print "No title found"
+}
+
+# Extract article content
+print "\nExtracting article content..."
+call browser_extract_text {
+    selector: articleSelectors
+} -> articleText
+
+if len(articleText) > 0 {
+    # Basic text analysis
+    print "\nArticle Analysis:"
+    print "- Character count: " + str(len(articleText))
     
-    // Fallback: extract all text
-    allText -> browser_extract_text()
-    print("Total text extracted: " + str(len(allText)) + " characters")
+    # Simple word count estimation (rough approximation)
+    # Assuming average word length of 5 characters + 1 space
+    set estimatedWords = len(articleText) / 6
+    print "- Estimated word count: " + str(estimatedWords)
+    print "- Estimated reading time: " + str(estimatedWords / 200) + " minutes"
+    
+    print "\nArticle text extracted successfully!"
+} else {
+    print "No article content found. This might not be an article page."
+    print "Trying to extract all text content..."
+    
+    # Fallback: extract all text
+    call browser_extract_text -> allText
+    print "Total text extracted: " + str(len(allText)) + " characters"
 }
 
-// Extract metadata if available
-print("\nExtracting metadata...")
-author -> browser_extract_text({
-    selector: ".author, .by-author, .article-author, [itemprop='author']"
-})
-if (len(author) > 0) {
-    print("Author: " + author)
+# Extract metadata if available
+print "\nExtracting metadata..."
+
+# Extract author
+call browser_extract_text {
+    selector: ".author, .by-author, .article-author, [itemprop='author'], .author-name"
+} -> author
+if len(author) > 0 {
+    print "Author found: " + str(len(author)) + " characters"
+} else {
+    print "No author information found"
 }
 
-date -> browser_extract_text({
-    selector: "time, .publish-date, .article-date, [itemprop='datePublished']"
-})
-if (len(date) > 0) {
-    print("Date: " + date)
+# Extract date
+call browser_extract_text {
+    selector: "time, .publish-date, .article-date, [itemprop='datePublished'], .date"
+} -> date
+if len(date) > 0 {
+    print "Date found: " + str(len(date)) + " characters"
+} else {
+    print "No date information found"
 }
 
-print("\nExtraction complete!")
+# Extract categories or tags
+call browser_extract_text {
+    selector: ".category, .tag, .tags, [rel='tag'], .article-tags"
+} -> tags
+if len(tags) > 0 {
+    print "Tags/Categories found: " + str(len(tags)) + " characters"
+}
+
+print "\n✓ Article extraction complete!"
