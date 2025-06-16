@@ -55,7 +55,7 @@ call browser_execute_script {
 } -> back_result
 
 # Wait for page to reload
-sleep 2
+wait 2
 
 # Test 4: Click hint by text
 call browser_hints_click {
@@ -70,7 +70,7 @@ call browser_execute_script {
     tabId: tab_id
 } -> back_result2
 
-sleep 2
+wait 2
 
 # Test 5: Show hints with hover action
 call browser_hints_show {

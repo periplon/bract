@@ -315,44 +315,10 @@ func (c *Connection) SendCommand(action string, data interface{}) (string, error
 
 // mapActionToCommand maps Go action names to Chrome extension command names
 func mapActionToCommand(action string) string {
-	// Map from Go-style names to Chrome extension command format
-	commandMap := map[string]string{
-		"listTabs":            "tabs.list",
-		"createTab":           "tabs.create",
-		"closeTab":            "tabs.close",
-		"activateTab":         "tabs.activate",
-		"reloadTab":           "tabs.reload",
-		"navigate":            "tabs.navigate",
-		"goBack":              "tabs.goBack",
-		"goForward":           "tabs.goForward",
-		"executeScript":       "tabs.executeScript",
-		"screenshot":          "tabs.captureScreenshot",
-		"captureScreenshot":   "tabs.captureScreenshot",
-		"captureVideo":        "tabs.captureVideo",
-		"extractText":         "tabs.extractText",
-		"extractContent":      "tabs.extractText",
-		"findElements":        "tabs.findElements",
-		"click":               "tabs.click",
-		"type":                "tabs.type",
-		"getValue":            "tabs.getValue",
-		"waitForElement":      "tabs.waitForElement",
-		"scroll":              "tabs.scroll",
-		"getCookies":          "tabs.getCookies",
-		"setCookie":           "tabs.setCookie",
-		"removeCookies":       "tabs.deleteCookie",
-		"deleteCookies":       "tabs.deleteCookie",
-		"getLocalStorage":     "tabs.getLocalStorage",
-		"setLocalStorage":     "tabs.setLocalStorage",
-		"clearLocalStorage":   "tabs.clearLocalStorage",
-		"getSessionStorage":   "tabs.getSessionStorage",
-		"setSessionStorage":   "tabs.setSessionStorage",
-		"clearSessionStorage": "tabs.clearSessionStorage",
-	}
-
-	if cmd, ok := commandMap[action]; ok {
-		return cmd
-	}
-	// Default: return the action as-is
+	// For Surfingkeys integration, we pass the action as-is
+	// The Surfingkeys commands are already in the correct format:
+	// hints.show, hints.click, search, find, clipboard.read, clipboard.write,
+	// omnibar.show, visual.start, getPageTitle
 	return action
 }
 
