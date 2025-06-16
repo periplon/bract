@@ -17,45 +17,6 @@ type BrowserClient interface {
 	HandleEvent(action string, data json.RawMessage)
 	WaitForConnection(ctx context.Context, timeout time.Duration) error
 
-	// Tab management
-	ListTabs(ctx context.Context) ([]browser.Tab, error)
-	CreateTab(ctx context.Context, url string, active bool) (*browser.Tab, error)
-	CloseTab(ctx context.Context, tabID int) error
-	ActivateTab(ctx context.Context, tabID int) error
-
-	// Navigation
-	Navigate(ctx context.Context, tabID int, url string, waitUntilLoad bool) (json.RawMessage, error)
-	Reload(ctx context.Context, tabID int, hardReload bool) error
-
-	// Interaction
-	Click(ctx context.Context, tabID int, selector string, timeout int) error
-	Type(ctx context.Context, tabID int, selector, text string, clearFirst bool, delay int) error
-	Scroll(ctx context.Context, tabID int, x, y *float64, selector, behavior string) (json.RawMessage, error)
-	WaitForElement(ctx context.Context, tabID int, selector string, timeout int, state string) (json.RawMessage, error)
-
-	// Content
-	ExecuteScript(ctx context.Context, tabID int, script string, args []interface{}) (json.RawMessage, error)
-	ExtractContent(ctx context.Context, tabID int, selector, contentType, attribute string) ([]string, error)
-	ExtractText(ctx context.Context, tabID int, selector string) (string, error)
-	Screenshot(ctx context.Context, tabID int, fullPage bool, selector, format string, quality int) (string, error)
-
-	// Storage
-	GetCookies(ctx context.Context, url, name string) ([]browser.Cookie, error)
-	SetCookie(ctx context.Context, cookie browser.Cookie) (json.RawMessage, error)
-	DeleteCookies(ctx context.Context, url, name string) error
-	GetLocalStorage(ctx context.Context, tabID int, key string) (string, error)
-	SetLocalStorage(ctx context.Context, tabID int, key, value string) error
-	ClearLocalStorage(ctx context.Context, tabID int) error
-	GetSessionStorage(ctx context.Context, tabID int, key string) (string, error)
-	SetSessionStorage(ctx context.Context, tabID int, key, value string) error
-	ClearSessionStorage(ctx context.Context, tabID int) error
-
-	// Actionables
-	GetActionables(ctx context.Context, tabID int) ([]browser.Actionable, error)
-
-	// Accessibility
-	GetAccessibilitySnapshot(ctx context.Context, tabID int, interestingOnly bool, root string) (json.RawMessage, error)
-
 	// Surfingkeys MCP Integration
 	ShowHints(ctx context.Context, tabID int, selector, action string) (json.RawMessage, error)
 	ClickHint(ctx context.Context, tabID int, selector string, index int, text string) (json.RawMessage, error)
