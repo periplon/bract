@@ -55,4 +55,15 @@ type BrowserClient interface {
 
 	// Accessibility
 	GetAccessibilitySnapshot(ctx context.Context, tabID int, interestingOnly bool, root string) (json.RawMessage, error)
+
+	// Surfingkeys MCP Integration
+	ShowHints(ctx context.Context, tabID int, selector, action string) (json.RawMessage, error)
+	ClickHint(ctx context.Context, tabID int, selector string, index int, text string) (json.RawMessage, error)
+	Search(ctx context.Context, query, engine string, newTab bool) (json.RawMessage, error)
+	Find(ctx context.Context, tabID int, text string, caseSensitive, wholeWord bool) (json.RawMessage, error)
+	ReadClipboard(ctx context.Context) (string, error)
+	WriteClipboard(ctx context.Context, text, format string) error
+	ShowOmnibar(ctx context.Context, tabID int, barType, query string) (json.RawMessage, error)
+	StartVisualMode(ctx context.Context, tabID int, selectElement bool) (json.RawMessage, error)
+	GetPageTitle(ctx context.Context, tabID int) (string, error)
 }

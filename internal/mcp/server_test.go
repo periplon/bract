@@ -104,6 +104,44 @@ func (m *MockBrowserClient) GetAccessibilitySnapshot(ctx context.Context, tabID 
 	return nil, nil
 }
 
+// Surfingkeys MCP Integration Methods
+
+func (m *MockBrowserClient) ShowHints(ctx context.Context, tabID int, selector, action string) (json.RawMessage, error) {
+	return nil, nil
+}
+
+func (m *MockBrowserClient) ClickHint(ctx context.Context, tabID int, selector string, index int, text string) (json.RawMessage, error) {
+	return nil, nil
+}
+
+func (m *MockBrowserClient) Search(ctx context.Context, query, engine string, newTab bool) (json.RawMessage, error) {
+	return nil, nil
+}
+
+func (m *MockBrowserClient) Find(ctx context.Context, tabID int, text string, caseSensitive, wholeWord bool) (json.RawMessage, error) {
+	return nil, nil
+}
+
+func (m *MockBrowserClient) ReadClipboard(ctx context.Context) (string, error) {
+	return "", nil
+}
+
+func (m *MockBrowserClient) WriteClipboard(ctx context.Context, text, format string) error {
+	return nil
+}
+
+func (m *MockBrowserClient) ShowOmnibar(ctx context.Context, tabID int, barType, query string) (json.RawMessage, error) {
+	return nil, nil
+}
+
+func (m *MockBrowserClient) StartVisualMode(ctx context.Context, tabID int, selectElement bool) (json.RawMessage, error) {
+	return nil, nil
+}
+
+func (m *MockBrowserClient) GetPageTitle(ctx context.Context, tabID int) (string, error) {
+	return "", nil
+}
+
 func TestNewServer(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -195,6 +195,71 @@ func (m *MockBrowserClient) GetAccessibilitySnapshot(ctx context.Context, tabID 
 	return args.Get(0).(json.RawMessage), args.Error(1)
 }
 
+// Surfingkeys MCP Integration Methods
+
+func (m *MockBrowserClient) ShowHints(ctx context.Context, tabID int, selector, action string) (json.RawMessage, error) {
+	args := m.Called(ctx, tabID, selector, action)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
+}
+
+func (m *MockBrowserClient) ClickHint(ctx context.Context, tabID int, selector string, index int, text string) (json.RawMessage, error) {
+	args := m.Called(ctx, tabID, selector, index, text)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
+}
+
+func (m *MockBrowserClient) Search(ctx context.Context, query, engine string, newTab bool) (json.RawMessage, error) {
+	args := m.Called(ctx, query, engine, newTab)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
+}
+
+func (m *MockBrowserClient) Find(ctx context.Context, tabID int, text string, caseSensitive, wholeWord bool) (json.RawMessage, error) {
+	args := m.Called(ctx, tabID, text, caseSensitive, wholeWord)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
+}
+
+func (m *MockBrowserClient) ReadClipboard(ctx context.Context) (string, error) {
+	args := m.Called(ctx)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockBrowserClient) WriteClipboard(ctx context.Context, text, format string) error {
+	args := m.Called(ctx, text, format)
+	return args.Error(0)
+}
+
+func (m *MockBrowserClient) ShowOmnibar(ctx context.Context, tabID int, barType, query string) (json.RawMessage, error) {
+	args := m.Called(ctx, tabID, barType, query)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
+}
+
+func (m *MockBrowserClient) StartVisualMode(ctx context.Context, tabID int, selectElement bool) (json.RawMessage, error) {
+	args := m.Called(ctx, tabID, selectElement)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(json.RawMessage), args.Error(1)
+}
+
+func (m *MockBrowserClient) GetPageTitle(ctx context.Context, tabID int) (string, error) {
+	args := m.Called(ctx, tabID)
+	return args.String(0), args.Error(1)
+}
+
 // Helper function to extract text from mcp.Content
 func getTextFromContent(t *testing.T, content mcp.Content) string {
 	// Try both pointer and value types since the interface could contain either
