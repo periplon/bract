@@ -16,6 +16,7 @@ call browser_hints_show {
     selector: "a",
     action: "click"
 } -> hints_all
+print hints_all
 print "✓ Showed hints for all links"
 
 # Small delay
