@@ -197,20 +197,24 @@ func (c *Connection) readPump() {
 		case "ping":
 			// Respond to ping
 			if err := c.SendMessage(&Message{
-				ID:   msg.ID,
-				Type: "pong",
+				ID:      msg.ID,
+				Type:    "pong",
+				Command: "pong", // Add command field to satisfy Chrome extension validation
 			}); err != nil {
 				log.Printf("Failed to send pong message: %v", err)
 			}
 		case "connected":
 			// Handle connection confirmation from Chrome extension
 			log.Printf("Chrome extension connected successfully: %s", c.ID)
-			// Optionally send acknowledgment back
-			if err := c.SendMessage(&Message{
-				ID:   msg.ID,
-				Type: "ack",
-			}); err != nil {
-				log.Printf("Failed to send acknowledgment: %v", err)
+			// Only send acknowledgment if the incoming message has an ID
+			if msg.ID != "" {
+				if err := c.SendMessage(&Message{
+					ID:      msg.ID,
+					Type:    "ack",
+					Command: "ack", // Add command field to satisfy Chrome extension validation
+				}); err != nil {
+					log.Printf("Failed to send acknowledgment: %v", err)
+				}
 			}
 		case "error":
 			// Handle error messages from Chrome extension
